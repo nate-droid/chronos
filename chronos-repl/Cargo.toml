@@ -1,0 +1,35 @@
+[package]
+name = "chronos-repl"
+version = "0.1.0"
+edition = "2021"
+authors = ["Chronos Contributors"]
+description = "Interactive REPL and development environment for the Chronos programming language"
+repository = "https://github.com/chronos-lang/chronos"
+license = "MIT OR Apache-2.0"
+keywords = ["repl", "interactive", "concatenative", "stack-based"]
+categories = ["development-tools", "command-line-utilities"]
+
+[lib]
+name = "chronos_repl"
+path = "src/lib.rs"
+
+[[bin]]
+name = "chronos-repl"
+path = "src/bin/repl.rs"
+
+[dependencies]
+chronos-core = { path = "../chronos-core" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3.0"
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

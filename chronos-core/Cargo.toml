@@ -1,0 +1,29 @@
+[package]
+name = "chronos-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Chronos Contributors"]
+description = "Core language runtime for the C∀O (Chronos) concatenative programming language"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/chronos-lang/chronos"
+keywords = ["concatenative", "functional", "category-theory", "proof-theory"]
+categories = ["compilers", "mathematics"]
+
+[lib]
+name = "chronos_core"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[features]
+default = ["serialization"]
+# Enable serialization support for external tools
+serialization = ["serde"]
+
+[[example]]
+name = "basic_evaluation"
+path = "examples/basic_evaluation.rs"
