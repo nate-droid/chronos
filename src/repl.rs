@@ -6,6 +6,7 @@
 use crate::core_lib::CoreLibrary;
 use crate::ordinal::OrdinalVerifier;
 use crate::parser::{ParseError, Parser, Statement};
+use crate::type_inference::TypeInferer;
 use crate::types::{OrdinalValue, Token, TypeDefinition, TypeSignature, Value, WordDefinition};
 use crate::vm::{VirtualMachine, VmError};
 use serde::{Deserialize, Serialize};
@@ -133,6 +134,10 @@ pub struct Repl {
     command_history: Vec<String>,
     /// Maximum history entries
     max_history_entries: usize,
+    /// Type inferer for automatic type inference
+    type_inferer: TypeInferer,
+    /// Whether to show type inference debugging
+    type_debug: bool,
 }
 
 impl Repl {
@@ -157,6 +162,8 @@ impl Repl {
             },
             command_history: Vec::new(),
             max_history_entries: 100,
+            type_inferer: TypeInferer::new(),
+            type_debug: false,
         };
 
         // Load core library into VM
@@ -185,6 +192,21 @@ impl Repl {
 
         // Parse the input
         let mut parser = Parser::new(input)?;
+
+        // Configure parser with known word signatures for type inference
+        // Add core library signatures
+        for (name, word_def) in self.core_lib.get_core_words() {
+            parser.add_word_signature(name.clone(), word_def.signature.clone());
+        }
+
+        // Add user-defined word signatures
+        for (name, word_def) in self.vm.get_all_word_definitions().iter() {
+            parser.add_word_signature(name.clone(), word_def.signature.clone());
+        }
+
+        // Set type debugging state
+        parser.set_type_debug(self.type_debug);
+
         let statements = parser.parse_all()?;
 
         // Process each statement
@@ -306,10 +328,19 @@ impl Repl {
         if let Some(signature) = self.pending_signatures.remove(&word_def.name) {
             word_def.signature = signature;
         } else if word_def.signature.inputs.is_empty() && word_def.signature.outputs.is_empty() {
+            // No explicit signature - this should not happen since parser now does inference
             return Err(ReplError::DefinitionError(format!(
-                "Word '{}' needs a type signature. Use :: to declare it first.",
+                "Word '{}' needs a type signature or could not be inferred. Use :: to declare it first.",
                 word_def.name
             )));
+        } else if self.type_debug {
+            // Show inferred type if type debugging is enabled
+            println!(
+                "Inferred type for '{}': {} -> {}",
+                word_def.name,
+                Self::format_type_list(&word_def.signature.inputs),
+                Self::format_type_list(&word_def.signature.outputs)
+            );
         }
 
         // Verify termination using ordinal analysis
@@ -330,7 +361,13 @@ impl Repl {
 
         // Define the word in the VM
         let name = word_def.name.clone();
+        let signature = word_def.signature.clone();
         self.vm.define_word(word_def);
+
+        // Add the word signature to the type inferer for future inference
+        self.type_inferer
+            .add_word_signature(name.clone(), signature);
+
         println!("Defined word '{}'", name);
         Ok(())
     }
@@ -411,6 +448,21 @@ impl Repl {
             }
             Some(&"types") => {
                 self.show_types();
+            }
+            Some(&"infer") => {
+                if let Some(word_name) = parts.get(1) {
+                    self.infer_word_type(word_name)?;
+                } else {
+                    println!("Usage: .infer <word_name>");
+                }
+            }
+            Some(&"type-debug") => {
+                self.type_debug = !self.type_debug;
+                self.type_inferer.set_debug(self.type_debug);
+                println!(
+                    "Type inference debugging: {}",
+                    if self.type_debug { "ON" } else { "OFF" }
+                );
             }
             Some(&"trace-log") => {
                 self.show_trace_log();
@@ -508,6 +560,54 @@ impl Repl {
         }
     }
 
+    /// Infer and show the type signature for a word
+    fn infer_word_type(&mut self, word_name: &str) -> Result<(), ReplError> {
+        // First, check if it's a core library word
+        if let Some(core_word) = self.core_lib.get_core_words().get(word_name) {
+            println!(
+                "Core word '{}' has type: {} -> {}",
+                word_name,
+                Self::format_type_list(&core_word.signature.inputs),
+                Self::format_type_list(&core_word.signature.outputs)
+            );
+            return Ok(());
+        }
+
+        // Check if it's a user-defined word in the VM
+        if let Some(user_word) = self.vm.get_word_definition(word_name) {
+            println!(
+                "User word '{}' has type: {} -> {}",
+                word_name,
+                Self::format_type_list(&user_word.signature.inputs),
+                Self::format_type_list(&user_word.signature.outputs)
+            );
+            return Ok(());
+        }
+
+        // Try to infer from a simple word definition pattern
+        println!(
+            "Word '{}' not found. To infer a type for a new word, define it first with ':', e.g.:",
+            word_name
+        );
+        println!("  : {} your-definition-here ;", word_name);
+        println!("Then use .infer {} to see the inferred type.", word_name);
+
+        Ok(())
+    }
+
+    /// Format a list of types for display
+    fn format_type_list(types: &[crate::types::Type]) -> String {
+        if types.is_empty() {
+            "()".to_string()
+        } else {
+            types
+                .iter()
+                .map(|t| format!("{}", t))
+                .collect::<Vec<_>>()
+                .join(" ")
+        }
+    }
+
     /// Show help information
     fn show_help(&self) {
         println!("C∀O REPL Commands:");
@@ -530,6 +630,8 @@ impl Repl {
         println!("  .clear-trace     Clear execution trace");
         println!("  .performance     Show performance metrics");
         println!("  .history         Show command history");
+        println!("  .infer <word>    Show inferred type for word");
+        println!("  .type-debug      Toggle type inference debugging");
         println!();
         println!("Session Management:");
         println!("  .save <file>     Save current session to file");

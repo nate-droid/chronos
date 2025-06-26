@@ -490,4 +490,14 @@ impl VirtualMachine {
             }),
         }
     }
+
+    /// Get a word definition from the dictionary
+    pub fn get_word_definition(&self, name: &str) -> Option<&WordDefinition> {
+        self.dictionary.get(name)
+    }
+
+    /// Get all word definitions
+    pub fn get_all_word_definitions(&self) -> &HashMap<String, WordDefinition> {
+        &self.dictionary
+    }
 }

@@ -1,0 +1,46 @@
+( Type Inference Demo for C∀O )
+( This file demonstrates the new type inference capabilities )
+
+( Test 1: Simple arithmetic - should infer Nat -> Nat )
+: double 2 * ;
+
+( Test 2: Addition with literal - should infer Nat -> Nat )
+: add3 3 + ;
+
+( Test 3: Stack operation - should infer T -> T T )
+: duplicate dup ;
+
+( Test 4: Drop operation - should infer T -> () )
+: discard drop ;
+
+( Test 5: Swap operation - should infer T U -> U T )
+: flip swap ;
+
+( Test 6: Simple literal - should infer () -> Nat )
+: five 5 ;
+
+( Test 7: Boolean literal - should infer () -> Bool )
+: truth true ;
+
+( Test 8: Comparison - should infer T T -> Bool )
+: equal = ;
+
+( Test 9: Arithmetic sequence - should infer Nat -> Nat )
+: square_plus_one dup * 1 + ;
+
+( Test 10: Multiple operations - should infer Nat Nat -> Nat )
+: average + 2 / ;
+
+( Interactive test commands to run: )
+( .infer double )
+( .infer add3 )
+( .infer duplicate )
+( .infer discard )
+( .infer flip )
+( .infer five )
+( .infer truth )
+( .infer equal )
+( .infer square_plus_one )
+( .infer average )
+( .type-debug )
+( : test_debug 10 20 + ; )

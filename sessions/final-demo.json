@@ -1,0 +1,19 @@
+{
+  "user_types": {},
+  "pending_signatures": {},
+  "user_words": [],
+  "stack": [
+    {
+      "Nat": 7
+    },
+    {
+      "Nat": 5
+    },
+    {
+      "Nat": 25
+    }
+  ],
+  "show_stack": true,
+  "show_ordinals": false,
+  "trace_execution": false
+}

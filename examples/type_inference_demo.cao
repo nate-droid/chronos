@@ -1,0 +1,123 @@
+( C∀O Type Inference Demo )
+( This file demonstrates the new type inference capabilities in C∀O )
+( Run with: cargo run < examples/type_inference_demo.cao )
+
+( Enable type inference debugging to see the process )
+.type-debug
+
+( ========================================= )
+( Basic Type Inference Examples )
+( ========================================= )
+
+( Simple arithmetic - infers Nat -> Nat )
+: double 2 * ;
+.infer double
+
+( Addition with literal - infers Nat -> Nat )
+: add3 3 + ;
+.infer add3
+
+( Subtraction - infers Nat -> Nat )
+: minus_one 1 - ;
+.infer minus_one
+
+( ========================================= )
+( Stack Operation Inference )
+( ========================================= )
+
+( Identity function - infers T -> T )
+: identity ;
+.infer identity
+
+( Duplication - infers T -> T T )
+: duplicate dup ;
+.infer duplicate
+
+( Drop operation - infers T -> () )
+: discard drop ;
+.infer discard
+
+( Swap operation - infers T U -> U T )
+: flip swap ;
+.infer flip
+
+( ========================================= )
+( Literal Type Inference )
+( ========================================= )
+
+( Natural number literal - infers () -> Nat )
+: five 5 ;
+.infer five
+
+( Boolean literal - infers () -> Bool )
+: truth true ;
+.infer truth
+
+( Unit literal - infers () -> Unit )
+: nothing () ;
+.infer nothing
+
+( ========================================= )
+( Comparison Operations )
+( ========================================= )
+
+( Equality - infers T T -> Bool )
+: equal = ;
+.infer equal
+
+( Less than - infers T T -> Bool )
+: less_than < ;
+.infer less_than
+
+( ========================================= )
+( Complex Expressions )
+( ========================================= )
+
+( Square plus one - infers Nat -> Nat )
+: square_plus_one dup * 1 + ;
+.infer square_plus_one
+
+( Average of two numbers - infers Nat Nat -> Nat )
+: average + 2 / ;
+.infer average
+
+( ========================================= )
+( Test the inferred words )
+( ========================================= )
+
+( Test basic arithmetic )
+5 double
+.s
+
+( Test stack operations )
+10 duplicate
+.s
+
+( Test complex operations )
+4 square_plus_one
+.s
+
+( Test average )
+10 20 average
+.s
+
+( ========================================= )
+( Show core library types for comparison )
+( ========================================= )
+
+.infer +
+.infer *
+.infer dup
+.infer drop
+.infer swap
+
+( ========================================= )
+( Turn off debugging and show final state )
+( ========================================= )
+
+.type-debug
+.words
+.types
+
+( Demo complete! )
+quit

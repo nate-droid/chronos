@@ -1,0 +1,48 @@
+# Enhanced C∀O REPL Demo Script
+# This demonstrates the new Language Improvements features
+
+# Basic arithmetic with stack display
+.stack
+3 4 +
+5 2 *
+.s
+
+# Define a simple word with tracing
+.trace
+:: double ( Nat -> Nat ) ;
+: double 2 * ;
+5 double
+.trace
+
+# Show execution trace
+.trace-log
+
+# Performance analysis
+.benchmark "3 4 +" 1000
+
+# Session management demo
+.save demo-session
+
+# Show performance metrics
+.performance
+
+# Command history
+.history
+
+# Available words and types
+.words
+.types
+
+# Clear everything and test restore
+.clear
+.load demo-session
+.s
+
+# Help system
+.help
+
+# About the system
+.about
+
+# Exit
+quit

@@ -11,6 +11,7 @@ mod lexer;
 mod ordinal;
 mod parser;
 mod repl;
+mod type_inference;
 mod types;
 mod vm;
 

@@ -4,6 +4,7 @@
 //! It supports the concatenative syntax with postfix notation.
 
 use crate::lexer::{LexError, Lexer};
+use crate::type_inference::TypeInferer;
 use crate::types::{
     OrdinalValue, Token, Type, TypeDefinition, TypeSignature, Value, WordDefinition,
 };
@@ -88,6 +89,7 @@ pub enum Statement {
 pub struct Parser {
     tokens: Vec<Token>,
     position: usize,
+    type_inferer: TypeInferer,
 }
 
 impl Parser {
@@ -98,6 +100,7 @@ impl Parser {
         Ok(Parser {
             tokens,
             position: 0,
+            type_inferer: TypeInferer::new(),
         })
     }
 
@@ -264,12 +267,21 @@ impl Parser {
             }
         }
 
+        // Try to infer the type signature from the body
+        let signature = match self.type_inferer.infer_word_type(&body) {
+            Ok(inferred_sig) => inferred_sig,
+            Err(_) => {
+                // If inference fails, use empty signature (will need explicit type later)
+                TypeSignature {
+                    inputs: vec![],
+                    outputs: vec![],
+                }
+            }
+        };
+
         Ok(WordDefinition {
             name,
-            signature: TypeSignature {
-                inputs: vec![],
-                outputs: vec![],
-            }, // Will be filled in later when we have type signatures
+            signature,
             body,
             is_axiom: false,
             ordinal_cost: OrdinalValue::Finite(1), // Default cost
@@ -513,15 +525,33 @@ impl Parser {
         }
     }
 
-    /// Parse all statements from the input
+    /// Parse all statements in the input
     pub fn parse_all(&mut self) -> Result<Vec<Statement>, ParseError> {
         let mut statements = Vec::new();
-
         while let Some(statement) = self.parse_statement()? {
             statements.push(statement);
         }
-
         Ok(statements)
+    }
+
+    /// Get a mutable reference to the type inferer
+    pub fn type_inferer_mut(&mut self) -> &mut TypeInferer {
+        &mut self.type_inferer
+    }
+
+    /// Get a reference to the type inferer
+    pub fn type_inferer(&self) -> &TypeInferer {
+        &self.type_inferer
+    }
+
+    /// Add a known word signature to the type inferer
+    pub fn add_word_signature(&mut self, name: String, signature: TypeSignature) {
+        self.type_inferer.add_word_signature(name, signature);
+    }
+
+    /// Enable or disable type inference debugging
+    pub fn set_type_debug(&mut self, debug: bool) {
+        self.type_inferer.set_debug(debug);
     }
 }
 
