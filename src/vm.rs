@@ -3,7 +3,9 @@
 //! This module implements the stack-based virtual machine that executes C∀O code.
 //! It follows the concatenative programming paradigm with postfix notation.
 
-use crate::types::{OrdinalValue, Token, Type, TypeSignature, Value, WordDefinition};
+use crate::types::{
+    MatchArm, OrdinalValue, Pattern, Token, Type, TypeSignature, Value, WordDefinition,
+};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -196,6 +198,7 @@ impl VirtualMachine {
                 Ok(())
             }
             Token::Word(word) => self.execute_word(word),
+            Token::MatchExpression { value, arms } => self.execute_match_expression(value, arms),
             _ => Err(VmError::InvalidOperation(format!(
                 "Cannot execute token: {:?}",
                 token
@@ -247,6 +250,14 @@ impl VirtualMachine {
             "." => self.builtin_dot(),
             ".s" => self.builtin_dot_s(),
             "--ordinal" => self.builtin_ordinal(),
+
+            // Polymorphic type constructors
+            "Some" => self.builtin_some(),
+            "None" => self.builtin_none(),
+            "Ok" => self.builtin_ok(),
+            "Err" => self.builtin_err(),
+            "list" => self.builtin_list(),
+            "test-pattern" => self.test_pattern_matching(),
 
             // User-defined words
             _ => {
@@ -499,5 +510,189 @@ impl VirtualMachine {
     /// Get all word definitions
     pub fn get_all_word_definitions(&self) -> &HashMap<String, WordDefinition> {
         &self.dictionary
+    }
+
+    /// Create Some(value) from top stack value
+    fn builtin_some(&mut self) -> Result<(), VmError> {
+        let value = self.pop()?;
+        self.push(Value::Option(Some(Box::new(value))));
+        Ok(())
+    }
+
+    /// Create None value
+    fn builtin_none(&mut self) -> Result<(), VmError> {
+        self.push(Value::Option(None));
+        Ok(())
+    }
+
+    /// Create Ok(value) from top stack value
+    fn builtin_ok(&mut self) -> Result<(), VmError> {
+        let value = self.pop()?;
+        self.push(Value::Result(Ok(Box::new(value))));
+        Ok(())
+    }
+
+    /// Create Err(value) from top stack value
+    fn builtin_err(&mut self) -> Result<(), VmError> {
+        let value = self.pop()?;
+        self.push(Value::Result(Err(Box::new(value))));
+        Ok(())
+    }
+
+    /// Create List from top n stack values (where n is on top of stack)
+    fn builtin_list(&mut self) -> Result<(), VmError> {
+        let count = self.pop()?;
+        if let Value::Nat(n) = count {
+            let mut values = Vec::new();
+            for _ in 0..n {
+                values.push(self.pop()?);
+            }
+            values.reverse(); // Since we popped in reverse order
+            self.push(Value::List(values));
+            Ok(())
+        } else {
+            Err(VmError::TypeMismatch {
+                expected: "Nat".to_string(),
+                found: "other type".to_string(),
+            })
+        }
+    }
+
+    /// Execute a match expression
+    pub fn execute_match_expression(
+        &mut self,
+        value_token: &Token,
+        arms: &[MatchArm],
+    ) -> Result<(), VmError> {
+        // First execute the value expression to get the value to match
+        self.execute_token(value_token)?;
+        let value = self.pop()?;
+
+        // Try each arm in order
+        for arm in arms {
+            if let Some(bindings) = self.match_pattern(&arm.pattern, &value)? {
+                // Pattern matched - push bindings to stack and execute body
+                for (_var_name, bound_value) in bindings {
+                    self.push(bound_value);
+                }
+                return self.execute_tokens(&arm.body);
+            }
+        }
+
+        Err(VmError::InvalidOperation("No pattern matched".to_string()))
+    }
+
+    /// Check if a pattern matches a value, returning bindings if successful
+    pub fn match_pattern(
+        &mut self,
+        pattern: &Pattern,
+        value: &Value,
+    ) -> Result<Option<Vec<(String, Value)>>, VmError> {
+        match pattern {
+            Pattern::Wildcard => {
+                // Wildcard matches anything
+                Ok(Some(vec![]))
+            }
+            Pattern::Variable(name) => {
+                // Variable matches anything and binds the value
+                Ok(Some(vec![(name.clone(), value.clone())]))
+            }
+            Pattern::Literal(lit_value) => {
+                // Literal matches if values are equal
+                if value == lit_value {
+                    Ok(Some(vec![]))
+                } else {
+                    Ok(None)
+                }
+            }
+            Pattern::Constructor { name, args } => {
+                // Match constructor patterns like Some(x), Ok(y), etc.
+                match (name.as_str(), value) {
+                    ("Some", Value::Option(Some(inner_value))) => {
+                        if args.len() == 1 {
+                            self.match_pattern(&args[0], inner_value)
+                        } else {
+                            Ok(None)
+                        }
+                    }
+                    ("None", Value::Option(None)) => {
+                        if args.is_empty() {
+                            Ok(Some(vec![]))
+                        } else {
+                            Ok(None)
+                        }
+                    }
+                    ("Ok", Value::Result(Ok(inner_value))) => {
+                        if args.len() == 1 {
+                            self.match_pattern(&args[0], inner_value)
+                        } else {
+                            Ok(None)
+                        }
+                    }
+                    ("Err", Value::Result(Err(error_value))) => {
+                        if args.len() == 1 {
+                            self.match_pattern(&args[0], error_value)
+                        } else {
+                            Ok(None)
+                        }
+                    }
+                    _ => Ok(None),
+                }
+            }
+            Pattern::List(patterns) => {
+                // Match list patterns
+                if let Value::List(values) = value {
+                    if patterns.len() != values.len() {
+                        return Ok(None);
+                    }
+
+                    let mut all_bindings = vec![];
+                    for (pattern, value) in patterns.iter().zip(values.iter()) {
+                        if let Some(bindings) = self.match_pattern(pattern, value)? {
+                            all_bindings.extend(bindings);
+                        } else {
+                            return Ok(None);
+                        }
+                    }
+                    Ok(Some(all_bindings))
+                } else {
+                    Ok(None)
+                }
+            }
+        }
+    }
+
+    /// Create a simple test pattern matching expression for demonstration
+    pub fn test_pattern_matching(&mut self) -> Result<(), VmError> {
+        // Test 1: Create Some(42) and match it
+        self.push(Value::Nat(42));
+        self.builtin_some()?;
+
+        // Create a simple match expression manually
+        let some_pattern = Pattern::Constructor {
+            name: "Some".to_string(),
+            args: vec![Pattern::Variable("x".to_string())],
+        };
+        let none_pattern = Pattern::Constructor {
+            name: "None".to_string(),
+            args: vec![],
+        };
+
+        let arms = vec![
+            MatchArm {
+                pattern: some_pattern,
+                body: vec![Token::Word("dup".to_string()), Token::Word("+".to_string())],
+            },
+            MatchArm {
+                pattern: none_pattern,
+                body: vec![Token::Literal(Value::Nat(0))],
+            },
+        ];
+
+        let value_token = Token::Literal(self.pop()?);
+        self.execute_match_expression(&value_token, &arms)?;
+
+        println!("Pattern matching test completed");
+        Ok(())
     }
 }

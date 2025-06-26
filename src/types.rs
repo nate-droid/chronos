@@ -25,6 +25,12 @@ pub enum Value {
         type_name: String,
         fields: HashMap<String, Value>,
     },
+    /// Option type - Some(value) or None
+    Option(Option<Box<Value>>),
+    /// Result type - Ok(value) or Err(error)
+    Result(Result<Box<Value>, Box<Value>>),
+    /// List type - ordered collection of values
+    List(Vec<Value>),
 }
 
 /// Ordinal values for termination analysis
@@ -57,6 +63,33 @@ pub enum Token {
     QuoteEnd,
     /// A comment
     Comment(String),
+    /// Pattern matching expression
+    MatchExpression {
+        value: Box<Token>,
+        arms: Vec<MatchArm>,
+    },
+}
+
+/// A single arm of a match expression
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MatchArm {
+    pub pattern: Pattern,
+    pub body: Vec<Token>,
+}
+
+/// Pattern matching patterns
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Pattern {
+    /// Wildcard pattern (_)
+    Wildcard,
+    /// Variable pattern (binds to any value)
+    Variable(String),
+    /// Literal pattern (matches exact value)
+    Literal(Value),
+    /// Constructor pattern (Some(x), Ok(y), etc.)
+    Constructor { name: String, args: Vec<Pattern> },
+    /// List pattern [a, b, c]
+    List(Vec<Pattern>),
 }
 
 /// Type signatures for categorical type checking
@@ -88,6 +121,12 @@ pub enum Type {
     },
     /// Type variable for polymorphism
     Variable(String),
+    /// Option type - Option<T>
+    Option(Box<Type>),
+    /// Result type - Result<T, E>
+    Result(Box<Type>, Box<Type>),
+    /// List type - List<T>
+    List(Box<Type>),
 }
 
 /// Word (function) definition in C∀O
@@ -137,6 +176,24 @@ impl fmt::Display for Value {
                 }
                 write!(f, "}}")
             }
+            Value::Option(opt) => match opt {
+                Some(value) => write!(f, "Some({})", value),
+                None => write!(f, "None"),
+            },
+            Value::Result(res) => match res {
+                Ok(value) => write!(f, "Ok({})", value),
+                Err(error) => write!(f, "Err({})", error),
+            },
+            Value::List(values) => {
+                write!(f, "[")?;
+                for (i, value) in values.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", value)?;
+                }
+                write!(f, "]")
+            }
         }
     }
 }
@@ -170,6 +227,16 @@ impl fmt::Display for Token {
             Token::QuoteStart => write!(f, "["),
             Token::QuoteEnd => write!(f, "]"),
             Token::Comment(text) => write!(f, "( {} )", text),
+            Token::MatchExpression { value, arms } => {
+                write!(f, "match {} ", value)?;
+                for arm in arms {
+                    write!(f, "| {:?} -> ", arm.pattern)?;
+                    for token in &arm.body {
+                        write!(f, "{} ", token)?;
+                    }
+                }
+                Ok(())
+            }
         }
     }
 }
@@ -190,6 +257,9 @@ impl fmt::Display for Type {
                 write!(f, "}}")
             }
             Type::Variable(name) => write!(f, "{}", name),
+            Type::Option(inner) => write!(f, "Option<{}>", inner),
+            Type::Result(ok_type, err_type) => write!(f, "Result<{}, {}>", ok_type, err_type),
+            Type::List(inner) => write!(f, "List<{}>", inner),
         }
     }
 }
