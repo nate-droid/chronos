@@ -621,7 +621,10 @@ mod tests {
                 partial_results: vec![],
             },
             priority: 1,
-            created_at: Instant::now(),
+            created_at: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             context: HashMap::new(),
             progress_log: vec![],
         };
@@ -652,7 +655,10 @@ mod tests {
                 partial_results: vec![],
             },
             priority: 1,
-            created_at: Instant::now(),
+            created_at: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             context: HashMap::new(),
             progress_log: vec![],
         };

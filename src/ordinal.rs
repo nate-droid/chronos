@@ -34,8 +34,6 @@ impl std::error::Error for OrdinalError {}
 
 /// Mock ordinal verifier for Phase 1 implementation
 pub struct OrdinalVerifier {
-    /// Maximum allowed recursion depth for analysis
-    max_analysis_depth: usize,
     /// Whether to use strict checking (disabled for mock)
     strict_mode: bool,
 }
@@ -44,7 +42,6 @@ impl OrdinalVerifier {
     /// Create a new ordinal verifier
     pub fn new() -> Self {
         OrdinalVerifier {
-            max_analysis_depth: 100,
             strict_mode: false, // Mock mode
         }
     }

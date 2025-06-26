@@ -3,7 +3,7 @@
 //! This module handles tokenization of C∀O source code, converting text into
 //! a sequence of tokens that can be parsed and executed.
 
-use crate::types::{OrdinalValue, Token, Value};
+use crate::types::{Token, Value};
 use std::fmt;
 
 /// Errors that can occur during lexical analysis
@@ -66,15 +66,6 @@ impl<'a> Lexer<'a> {
             self.current_char = None;
         } else {
             self.current_char = self.input.chars().nth(self.position);
-        }
-    }
-
-    /// Peek at the next character without advancing
-    fn peek(&self) -> Option<char> {
-        if self.position + 1 >= self.input.len() {
-            None
-        } else {
-            self.input.chars().nth(self.position + 1)
         }
     }
 

@@ -3,7 +3,7 @@
 //! Implements Hindley-Milner style type inference to automatically deduce types
 //! for word definitions, reducing boilerplate while maintaining type safety.
 
-use crate::types::{Token, Type, TypeSignature, Value, WordDefinition};
+use crate::types::{Token, Type, TypeSignature, Value};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -253,68 +253,49 @@ impl TypeInferer {
             });
         }
 
-        // Start with empty stack effect
-        let mut input_types = Vec::new();
-        let mut output_types = Vec::new();
-
         // Simple pattern matching for common cases
-        match tokens {
+        let (input_types, output_types) = match tokens {
             // Arithmetic operations: consume two Nat, produce one Nat
             [Token::Word(op)] if matches!(op.as_str(), "+" | "-" | "*" | "/" | "%") => {
-                input_types = vec![Type::Nat, Type::Nat];
-                output_types = vec![Type::Nat];
+                (vec![Type::Nat, Type::Nat], vec![Type::Nat])
             }
 
             // Comparison operations: consume two values of same type, produce Bool
             [Token::Word(op)] if matches!(op.as_str(), "=" | "<" | ">" | "<=" | ">=") => {
                 let t = self.fresh_type_var();
-                input_types = vec![t.clone(), t];
-                output_types = vec![Type::Bool];
+                (vec![t.clone(), t], vec![Type::Bool])
             }
 
             // Stack operations
             [Token::Word(op)] if op == "dup" => {
                 let t = self.fresh_type_var();
-                input_types = vec![t.clone()];
-                output_types = vec![t.clone(), t];
+                (vec![t.clone()], vec![t.clone(), t])
             }
 
             [Token::Word(op)] if op == "drop" => {
                 let t = self.fresh_type_var();
-                input_types = vec![t];
-                output_types = vec![];
+                (vec![t], vec![])
             }
 
             [Token::Word(op)] if op == "swap" => {
                 let t1 = self.fresh_type_var();
                 let t2 = self.fresh_type_var();
-                input_types = vec![t1.clone(), t2.clone()];
-                output_types = vec![t2, t1];
+                (vec![t1.clone(), t2.clone()], vec![t2, t1])
             }
 
             // Literal followed by operation
             [Token::Literal(Value::Nat(_)), Token::Word(op)]
                 if matches!(op.as_str(), "+" | "-" | "*" | "/" | "%") =>
             {
-                input_types = vec![Type::Nat];
-                output_types = vec![Type::Nat];
+                (vec![Type::Nat], vec![Type::Nat])
             }
 
             // Just a literal
-            [Token::Literal(Value::Nat(_))] => {
-                input_types = vec![];
-                output_types = vec![Type::Nat];
-            }
+            [Token::Literal(Value::Nat(_))] => (vec![], vec![Type::Nat]),
 
-            [Token::Literal(Value::Bool(_))] => {
-                input_types = vec![];
-                output_types = vec![Type::Bool];
-            }
+            [Token::Literal(Value::Bool(_))] => (vec![], vec![Type::Bool]),
 
-            [Token::Literal(Value::Unit)] => {
-                input_types = vec![];
-                output_types = vec![Type::Unit];
-            }
+            [Token::Literal(Value::Unit)] => (vec![], vec![Type::Unit]),
 
             // Known word reference
             [Token::Word(word_name)] => {
@@ -332,11 +313,9 @@ impl TypeInferer {
                 }
 
                 // Try to infer based on sequence analysis
-                let (inferred_inputs, inferred_outputs) = self.infer_sequence_type(tokens)?;
-                input_types = inferred_inputs;
-                output_types = inferred_outputs;
+                self.infer_sequence_type(tokens)?
             }
-        }
+        };
 
         Ok(TypeSignature {
             inputs: input_types,

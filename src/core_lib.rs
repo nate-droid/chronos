@@ -4,7 +4,7 @@
 //! of the C∀O language. These are the minimal, provably consistent set of operations
 //! that all C∀O environments start with.
 
-use crate::types::{OrdinalValue, Token, Type, TypeSignature, Value, WordDefinition};
+use crate::types::{OrdinalValue, Type, TypeSignature, WordDefinition};
 use std::collections::HashMap;
 
 /// The Genesis Axioms - core definitions that bootstrap the C∀O system
@@ -418,7 +418,7 @@ impl CoreLibrary {
     }
 
     /// Helper to define a builtin word with signature
-    fn define_builtin(&mut self, name: &str, inputs: Vec<Type>, outputs: Vec<Type>, doc: &str) {
+    fn define_builtin(&mut self, name: &str, inputs: Vec<Type>, outputs: Vec<Type>, _doc: &str) {
         let signature = TypeSignature { inputs, outputs };
 
         let word_def = WordDefinition {

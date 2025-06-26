@@ -115,18 +115,6 @@ impl Parser {
         self.current_token()
     }
 
-    /// Expect a specific token and advance
-    fn expect_token(&mut self, expected: &str) -> Result<Token, ParseError> {
-        match self.current_token() {
-            Some(token) => {
-                let token = token.clone();
-                self.advance();
-                Ok(token)
-            }
-            None => Err(ParseError::UnexpectedEof(expected.to_string())),
-        }
-    }
-
     /// Parse a type from tokens
     fn parse_type(&mut self) -> Result<Type, ParseError> {
         match self.current_token() {
@@ -500,7 +488,7 @@ impl Parser {
                     }
                 }
             }
-            Some(token) => {
+            Some(_token) => {
                 // Parse as expression
                 let mut expr_tokens = Vec::new();
                 while let Some(token) = self.current_token() {
@@ -532,16 +520,6 @@ impl Parser {
             statements.push(statement);
         }
         Ok(statements)
-    }
-
-    /// Get a mutable reference to the type inferer
-    pub fn type_inferer_mut(&mut self) -> &mut TypeInferer {
-        &mut self.type_inferer
-    }
-
-    /// Get a reference to the type inferer
-    pub fn type_inferer(&self) -> &TypeInferer {
-        &self.type_inferer
     }
 
     /// Add a known word signature to the type inferer

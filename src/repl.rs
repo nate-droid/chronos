@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use std::fs;
-use std::io::Write;
+
 use std::path::Path;
 use std::time::{Duration, Instant};
 
@@ -167,7 +167,7 @@ impl Repl {
         };
 
         // Load core library into VM
-        for (name, word_def) in repl.core_lib.get_core_words() {
+        for (_name, word_def) in repl.core_lib.get_core_words() {
             repl.vm.define_word(word_def.clone());
         }
 
@@ -384,7 +384,7 @@ impl Repl {
     fn handle_axiom_declaration(
         &mut self,
         name: String,
-        signature: TypeSignature,
+        _signature: TypeSignature,
     ) -> Result<(), ReplError> {
         // Check if we have a pending signature that matches
         if let Some(pending_sig) = self.pending_signatures.remove(&name) {
