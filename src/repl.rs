@@ -6,10 +6,15 @@
 use crate::core_lib::CoreLibrary;
 use crate::ordinal::OrdinalVerifier;
 use crate::parser::{ParseError, Parser, Statement};
-use crate::types::{OrdinalValue, TypeDefinition, TypeSignature, WordDefinition};
+use crate::types::{OrdinalValue, Token, TypeDefinition, TypeSignature, Value, WordDefinition};
 use crate::vm::{VirtualMachine, VmError};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
+use std::fs;
+use std::io::Write;
+use std::path::Path;
+use std::time::{Duration, Instant};
 
 /// Errors that can occur in the REPL
 #[derive(Debug, Clone)]
@@ -24,6 +29,8 @@ pub enum ReplError {
     DefinitionError(String),
     /// I/O error
     IoError(String),
+    /// Session error
+    SessionError(String),
 }
 
 impl fmt::Display for ReplError {
@@ -34,6 +41,7 @@ impl fmt::Display for ReplError {
             ReplError::TypeError(e) => write!(f, "Type error: {}", e),
             ReplError::DefinitionError(e) => write!(f, "Definition error: {}", e),
             ReplError::IoError(e) => write!(f, "I/O error: {}", e),
+            ReplError::SessionError(e) => write!(f, "Session error: {}", e),
         }
     }
 }
@@ -52,6 +60,51 @@ impl From<VmError> for ReplError {
     }
 }
 
+/// Session data that can be saved and restored
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionData {
+    /// User-defined type definitions
+    pub user_types: HashMap<String, TypeDefinition>,
+    /// Pending type signatures
+    pub pending_signatures: HashMap<String, TypeSignature>,
+    /// User-defined words (serializable version)
+    pub user_words: Vec<WordDefinition>,
+    /// Current stack contents
+    pub stack: Vec<Value>,
+    /// Session settings
+    pub show_stack: bool,
+    pub show_ordinals: bool,
+    pub trace_execution: bool,
+}
+
+/// Execution trace entry
+#[derive(Debug, Clone)]
+pub struct TraceEntry {
+    /// Timestamp
+    pub timestamp: Instant,
+    /// Token being executed
+    pub token: Token,
+    /// Stack before execution
+    pub stack_before: Vec<Value>,
+    /// Stack after execution
+    pub stack_after: Vec<Value>,
+    /// Execution time
+    pub duration: Duration,
+}
+
+/// Performance metrics
+#[derive(Debug, Clone)]
+pub struct PerformanceMetrics {
+    /// Total execution time
+    pub total_time: Duration,
+    /// Number of operations
+    pub operation_count: usize,
+    /// Stack depth statistics
+    pub max_stack_depth: usize,
+    /// Memory usage (approximate)
+    pub memory_usage: usize,
+}
+
 /// The REPL state and environment
 pub struct Repl {
     /// The virtual machine
@@ -68,6 +121,18 @@ pub struct Repl {
     show_stack: bool,
     /// Whether to show ordinal costs
     show_ordinals: bool,
+    /// Whether to trace execution
+    trace_execution: bool,
+    /// Execution trace (limited size for performance)
+    execution_trace: Vec<TraceEntry>,
+    /// Maximum trace entries to keep
+    max_trace_entries: usize,
+    /// Performance metrics for current session
+    performance_metrics: PerformanceMetrics,
+    /// Command history
+    command_history: Vec<String>,
+    /// Maximum history entries
+    max_history_entries: usize,
 }
 
 impl Repl {
@@ -81,6 +146,17 @@ impl Repl {
             pending_signatures: HashMap::new(),
             show_stack: false,
             show_ordinals: false,
+            trace_execution: false,
+            execution_trace: Vec::new(),
+            max_trace_entries: 1000,
+            performance_metrics: PerformanceMetrics {
+                total_time: Duration::from_secs(0),
+                operation_count: 0,
+                max_stack_depth: 0,
+                memory_usage: 0,
+            },
+            command_history: Vec::new(),
+            max_history_entries: 100,
         };
 
         // Load core library into VM
@@ -95,10 +171,17 @@ impl Repl {
     pub fn eval(&mut self, input: &str) -> Result<(), ReplError> {
         let input = input.trim();
 
+        // Add to command history
+        if !input.is_empty() && !input.starts_with('.') {
+            self.add_to_history(input.to_string());
+        }
+
         // Handle special REPL commands
         if input.starts_with('.') {
             return self.handle_repl_command(input);
         }
+
+        let start_time = Instant::now();
 
         // Parse the input
         let mut parser = Parser::new(input)?;
@@ -108,6 +191,15 @@ impl Repl {
         for statement in statements {
             self.eval_statement(statement)?;
         }
+
+        // Update performance metrics
+        let duration = start_time.elapsed();
+        self.performance_metrics.total_time += duration;
+        self.performance_metrics.operation_count += 1;
+        self.performance_metrics.max_stack_depth = self
+            .performance_metrics
+            .max_stack_depth
+            .max(self.vm.stack().len());
 
         // Show stack if enabled
         if self.show_stack && !self.vm.stack().is_empty() {
@@ -121,7 +213,11 @@ impl Repl {
     fn eval_statement(&mut self, statement: Statement) -> Result<(), ReplError> {
         match statement {
             Statement::Expression(tokens) => {
-                self.vm.execute_tokens(&tokens)?;
+                if self.trace_execution {
+                    self.execute_tokens_with_trace(&tokens)?;
+                } else {
+                    self.vm.execute_tokens(&tokens)?;
+                }
             }
             Statement::TypeSignatureDecl { name, signature } => {
                 self.handle_type_signature_decl(name, signature)?;
@@ -137,6 +233,59 @@ impl Repl {
             }
         }
         Ok(())
+    }
+
+    /// Execute tokens with detailed tracing
+    fn execute_tokens_with_trace(&mut self, tokens: &[Token]) -> Result<(), VmError> {
+        for token in tokens {
+            let stack_before = self.vm.stack().to_vec();
+            let start_time = Instant::now();
+
+            // Execute the token
+            self.vm.execute_token(token)?;
+
+            let duration = start_time.elapsed();
+            let stack_after = self.vm.stack().to_vec();
+
+            // Record trace entry
+            let trace_entry = TraceEntry {
+                timestamp: start_time,
+                token: token.clone(),
+                stack_before: stack_before.clone(),
+                stack_after: stack_after.clone(),
+                duration,
+            };
+
+            // Print trace if enabled
+            if self.trace_execution {
+                println!(
+                    "TRACE: {} | {} -> {} ({:?})",
+                    token,
+                    stack_before.len(),
+                    stack_after.len(),
+                    duration
+                );
+            }
+
+            self.add_trace_entry(trace_entry);
+        }
+        Ok(())
+    }
+
+    /// Add entry to execution trace (with size limit)
+    fn add_trace_entry(&mut self, entry: TraceEntry) {
+        self.execution_trace.push(entry);
+        if self.execution_trace.len() > self.max_trace_entries {
+            self.execution_trace.remove(0);
+        }
+    }
+
+    /// Add command to history (with size limit)
+    fn add_to_history(&mut self, command: String) {
+        self.command_history.push(command);
+        if self.command_history.len() > self.max_history_entries {
+            self.command_history.remove(0);
+        }
     }
 
     /// Handle type signature declaration
@@ -242,15 +391,61 @@ impl Repl {
                     if self.show_ordinals { "ON" } else { "OFF" }
                 );
             }
+            Some(&"trace") => {
+                self.trace_execution = !self.trace_execution;
+                println!(
+                    "Execution tracing: {}",
+                    if self.trace_execution { "ON" } else { "OFF" }
+                );
+            }
             Some(&"clear") => {
                 self.vm.clear_stack();
                 println!("Stack cleared");
+            }
+            Some(&"clear-trace") => {
+                self.execution_trace.clear();
+                println!("Execution trace cleared");
             }
             Some(&"words") => {
                 self.show_words();
             }
             Some(&"types") => {
                 self.show_types();
+            }
+            Some(&"trace-log") => {
+                self.show_trace_log();
+            }
+            Some(&"performance") | Some(&"perf") => {
+                self.show_performance_metrics();
+            }
+            Some(&"history") => {
+                self.show_command_history();
+            }
+            Some(&"save") => {
+                if let Some(filename) = parts.get(1) {
+                    self.save_session(filename)?;
+                } else {
+                    println!("Usage: .save <filename>");
+                }
+            }
+            Some(&"load") => {
+                if let Some(filename) = parts.get(1) {
+                    self.load_session(filename)?;
+                } else {
+                    println!("Usage: .load <filename>");
+                }
+            }
+            Some(&"benchmark") => {
+                if parts.len() >= 3 {
+                    let code = parts[1];
+                    if let Ok(iterations) = parts[2].parse::<usize>() {
+                        self.benchmark_code(code, iterations)?;
+                    } else {
+                        println!("Usage: .benchmark <code> <iterations>");
+                    }
+                } else {
+                    println!("Usage: .benchmark <code> <iterations>");
+                }
             }
             Some(&"help") => {
                 self.show_help();
@@ -318,16 +513,30 @@ impl Repl {
         println!("C∀O REPL Commands:");
         println!("==================");
         println!();
-        println!("REPL Commands (start with .):");
-        println!("  .s          Show stack contents");
-        println!("  .stack      Toggle automatic stack display");
-        println!("  .ordinals   Toggle ordinal cost display");
-        println!("  .clear      Clear the stack");
-        println!("  .words      List all defined words");
-        println!("  .types      List all types");
-        println!("  .help       Show this help");
-        println!("  .about      About C∀O");
-        println!("  .reset      Reset REPL to initial state");
+        println!("Basic Commands:");
+        println!("  .s               Show stack contents");
+        println!("  .stack           Toggle automatic stack display");
+        println!("  .ordinals        Toggle ordinal cost display");
+        println!("  .clear           Clear the stack");
+        println!("  .words           List all defined words");
+        println!("  .types           List all types");
+        println!("  .help            Show this help");
+        println!("  .about           About C∀O");
+        println!("  .reset           Reset REPL to initial state");
+        println!();
+        println!("Development & Debugging:");
+        println!("  .trace           Toggle execution tracing");
+        println!("  .trace-log       Show recent execution trace");
+        println!("  .clear-trace     Clear execution trace");
+        println!("  .performance     Show performance metrics");
+        println!("  .history         Show command history");
+        println!();
+        println!("Session Management:");
+        println!("  .save <file>     Save current session to file");
+        println!("  .load <file>     Load session from file");
+        println!();
+        println!("Performance Analysis:");
+        println!("  .benchmark <code> <n>  Benchmark code n times");
         println!();
         println!("Language Syntax:");
         println!("  :: name ( inputs -> outputs ) ;   Declare type signature");
@@ -341,7 +550,9 @@ impl Repl {
         println!("  3 4 +                             Simple arithmetic");
         println!("  :: square ( Nat -> Nat ) ;        Type signature");
         println!("  : square dup * ;                  Word definition");
-        println!("  5 square .                        Use and print");
+        println!("  5 square                          Use word");
+        println!("  .trace                            Enable tracing");
+        println!("  .save my-work                     Save session");
         println!();
         println!("Type 'help' (without .) for core library documentation");
     }
@@ -365,6 +576,216 @@ impl Repl {
         println!("• Self-evolution and metaprogramming");
         println!();
         println!("For more information, see the README.md and Implementation-plans.md");
+    }
+
+    /// Show execution trace log
+    fn show_trace_log(&self) {
+        if self.execution_trace.is_empty() {
+            println!("No execution trace available. Enable with .trace");
+            return;
+        }
+
+        println!(
+            "Execution Trace (last {} entries):",
+            self.execution_trace.len().min(20)
+        );
+        println!("==================================");
+
+        let recent_entries = if self.execution_trace.len() > 20 {
+            &self.execution_trace[self.execution_trace.len() - 20..]
+        } else {
+            &self.execution_trace
+        };
+
+        for (i, entry) in recent_entries.iter().enumerate() {
+            println!(
+                "{:3}: {} | Stack: {} -> {} | Time: {:?}",
+                i + 1,
+                entry.token,
+                entry.stack_before.len(),
+                entry.stack_after.len(),
+                entry.duration
+            );
+        }
+    }
+
+    /// Show performance metrics
+    fn show_performance_metrics(&self) {
+        println!("Performance Metrics:");
+        println!("===================");
+        println!(
+            "Total execution time: {:?}",
+            self.performance_metrics.total_time
+        );
+        println!(
+            "Operations executed: {}",
+            self.performance_metrics.operation_count
+        );
+        println!(
+            "Max stack depth: {}",
+            self.performance_metrics.max_stack_depth
+        );
+        println!(
+            "Approx. memory usage: {} bytes",
+            self.performance_metrics.memory_usage
+        );
+
+        if self.performance_metrics.operation_count > 0 {
+            let avg_time = self.performance_metrics.total_time
+                / self.performance_metrics.operation_count as u32;
+            println!("Average time per operation: {:?}", avg_time);
+        }
+
+        println!("Trace entries stored: {}", self.execution_trace.len());
+        println!("History entries: {}", self.command_history.len());
+    }
+
+    /// Show command history
+    fn show_command_history(&self) {
+        if self.command_history.is_empty() {
+            println!("No command history available");
+            return;
+        }
+
+        println!(
+            "Command History (last {} entries):",
+            self.command_history.len().min(20)
+        );
+        println!("==================================");
+
+        let recent_history = if self.command_history.len() > 20 {
+            &self.command_history[self.command_history.len() - 20..]
+        } else {
+            &self.command_history
+        };
+
+        for (i, command) in recent_history.iter().enumerate() {
+            println!("{:3}: {}", i + 1, command);
+        }
+    }
+
+    /// Save current session to file
+    fn save_session(&self, filename: &str) -> Result<(), ReplError> {
+        let session_data = SessionData {
+            user_types: self.user_types.clone(),
+            pending_signatures: self.pending_signatures.clone(),
+            user_words: Vec::new(), // TODO: Extract user words from VM
+            stack: self.vm.stack().to_vec(),
+            show_stack: self.show_stack,
+            show_ordinals: self.show_ordinals,
+            trace_execution: self.trace_execution,
+        };
+
+        let json_data = serde_json::to_string_pretty(&session_data)
+            .map_err(|e| ReplError::SessionError(format!("Failed to serialize session: {}", e)))?;
+
+        let session_dir = Path::new("sessions");
+        if !session_dir.exists() {
+            fs::create_dir_all(session_dir).map_err(|e| {
+                ReplError::IoError(format!("Failed to create sessions directory: {}", e))
+            })?;
+        }
+
+        let filepath = session_dir.join(format!("{}.json", filename));
+        fs::write(&filepath, json_data)
+            .map_err(|e| ReplError::IoError(format!("Failed to write session file: {}", e)))?;
+
+        println!("Session saved to: {}", filepath.display());
+        Ok(())
+    }
+
+    /// Load session from file
+    fn load_session(&mut self, filename: &str) -> Result<(), ReplError> {
+        let session_dir = Path::new("sessions");
+        let filepath = session_dir.join(format!("{}.json", filename));
+
+        if !filepath.exists() {
+            return Err(ReplError::SessionError(format!(
+                "Session file not found: {}",
+                filepath.display()
+            )));
+        }
+
+        let json_data = fs::read_to_string(&filepath)
+            .map_err(|e| ReplError::IoError(format!("Failed to read session file: {}", e)))?;
+
+        let session_data: SessionData = serde_json::from_str(&json_data).map_err(|e| {
+            ReplError::SessionError(format!("Failed to deserialize session: {}", e))
+        })?;
+
+        // Restore session data
+        self.user_types = session_data.user_types;
+        self.pending_signatures = session_data.pending_signatures;
+        self.show_stack = session_data.show_stack;
+        self.show_ordinals = session_data.show_ordinals;
+        self.trace_execution = session_data.trace_execution;
+
+        // Restore stack
+        self.vm.clear_stack();
+        for value in session_data.stack {
+            self.vm.push(value);
+        }
+
+        // TODO: Restore user-defined words
+
+        println!("Session loaded from: {}", filepath.display());
+        Ok(())
+    }
+
+    /// Benchmark code execution
+    fn benchmark_code(&mut self, code: &str, iterations: usize) -> Result<(), ReplError> {
+        println!("Benchmarking '{}' for {} iterations...", code, iterations);
+
+        let mut total_time = Duration::from_nanos(0);
+        let mut min_time = Duration::from_secs(u64::MAX);
+        let mut max_time = Duration::from_nanos(0);
+
+        // Save current stack state
+        let initial_stack = self.vm.stack().to_vec();
+
+        for i in 0..iterations {
+            // Restore initial stack state
+            self.vm.clear_stack();
+            for value in &initial_stack {
+                self.vm.push(value.clone());
+            }
+
+            let start_time = Instant::now();
+
+            // Parse and execute the code
+            let mut parser = Parser::new(code)?;
+            let statements = parser.parse_all()?;
+            for statement in statements {
+                self.eval_statement(statement)?;
+            }
+
+            let duration = start_time.elapsed();
+            total_time += duration;
+            min_time = min_time.min(duration);
+            max_time = max_time.max(duration);
+
+            if i % (iterations / 10).max(1) == 0 {
+                print!(".");
+                std::io::Write::flush(&mut std::io::stdout()).unwrap();
+            }
+        }
+
+        println!();
+        println!("Benchmark Results:");
+        println!("=================");
+        println!("Total time: {:?}", total_time);
+        println!("Average time: {:?}", total_time / iterations as u32);
+        println!("Min time: {:?}", min_time);
+        println!("Max time: {:?}", max_time);
+        println!("Iterations: {}", iterations);
+
+        // Restore original stack
+        self.vm.clear_stack();
+        for value in &initial_stack {
+            self.vm.push(value.clone());
+        }
+
+        Ok(())
     }
 }
 

@@ -3,11 +3,12 @@
 //! This module defines the fundamental types and values in the C∀O language,
 //! following categorical foundations where types are objects and functions are morphisms.
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
 /// The core value types in C∀O
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Value {
     /// Terminal object - represents a single value
     Unit,
@@ -27,7 +28,7 @@ pub enum Value {
 }
 
 /// Ordinal values for termination analysis
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum OrdinalValue {
     /// Zero ordinal
     Zero,
@@ -44,7 +45,7 @@ pub enum OrdinalValue {
 }
 
 /// Tokens representing parsed C∀O code
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Token {
     /// A literal value
     Literal(Value),
@@ -59,7 +60,7 @@ pub enum Token {
 }
 
 /// Type signatures for categorical type checking
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TypeSignature {
     /// Input types (stack effect - what's consumed)
     pub inputs: Vec<Type>,
@@ -68,7 +69,7 @@ pub struct TypeSignature {
 }
 
 /// The type system representing categorical objects
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Type {
     /// Terminal object type
     Unit,
@@ -90,7 +91,7 @@ pub enum Type {
 }
 
 /// Word (function) definition in C∀O
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WordDefinition {
     /// The name of the word
     pub name: String,
@@ -105,7 +106,7 @@ pub struct WordDefinition {
 }
 
 /// User-defined type definition
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeDefinition {
     /// Name of the type
     pub name: String,
