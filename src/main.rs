@@ -7,10 +7,13 @@
 //! - Collaborative verification and evolution
 
 mod core_lib;
+mod goal_builders;
 mod lexer;
 mod ordinal;
 mod parser;
 mod repl;
+mod shell;
+mod shell_manager;
 mod type_inference;
 mod types;
 mod vm;
