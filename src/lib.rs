@@ -9,6 +9,7 @@
 
 pub mod core_lib;
 pub mod goal_builders;
+pub mod hypervisor;
 pub mod lexer;
 pub mod ordinal;
 pub mod parser;
@@ -24,6 +25,7 @@ pub use goal_builders::{
     AxiomBuilder, ComputationBuilder, ExplorationBuilder, GoalTemplate, GoalTemplateFactory,
     PuzzleBuilder, quick,
 };
+pub use hypervisor::{Hypervisor, HypervisorConfig, ShellStatus, VirtualShell};
 pub use repl::Repl;
 pub use shell::{CompletionStatus, Goal, GoalType, Shell, ShellMode};
 pub use shell_manager::{CoordinationStrategy, ShellManager};

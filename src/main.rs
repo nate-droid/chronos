@@ -8,6 +8,7 @@
 
 mod core_lib;
 mod goal_builders;
+mod hypervisor;
 mod lexer;
 mod ordinal;
 mod parser;
@@ -20,12 +21,14 @@ mod vm;
 
 use std::io::{self, Write};
 
+use crate::hypervisor::Hypervisor;
 use crate::repl::Repl;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("C∀O (Kao) - Categorical ∀xiomatic Ordinal Language v0.1.0");
     println!("An Evolving Axiomatic Programming Language");
     println!("Type 'help' for available commands, 'quit' to exit");
+    println!("Type 'hypervisor' to enter hypervisor mode");
     println!();
 
     let mut repl = Repl::new();
@@ -46,6 +49,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if input == "quit" || input == "exit" {
                     println!("Farewell! May your axioms remain consistent.");
                     break;
+                }
+
+                if input == "hypervisor" {
+                    println!("Entering hypervisor mode...");
+                    let mut hypervisor = Hypervisor::new();
+                    if let Err(e) = hypervisor.start_tui() {
+                        eprintln!("Hypervisor error: {}", e);
+                    }
+                    println!("Returned to C∀O REPL");
+                    continue;
                 }
 
                 if let Err(e) = repl.eval(input) {
