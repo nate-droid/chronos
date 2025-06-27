@@ -4,9 +4,9 @@
 //! to provide an interactive development environment with session management,
 //! tracing, performance monitoring, and enhanced user experience features.
 
-use crate::commands::{ReplCommand, execute_command, parse_command};
+use crate::commands::{execute_command, parse_command, ReplCommand};
 use crate::display::{
-    DisplayConfig, format_duration, format_error, format_help, format_info, format_stack_rich,
+    format_duration, format_error, format_help, format_info, format_stack_rich, DisplayConfig,
 };
 use crate::error::{ReplError, Result};
 use crate::session::Session;
@@ -184,6 +184,11 @@ impl EnhancedRepl {
             // Read input
             let mut input = String::new();
             match io::stdin().read_line(&mut input) {
+                Ok(0) => {
+                    // EOF reached - exit gracefully
+                    println!("\nFarewell! May your axioms remain consistent.");
+                    break;
+                }
                 Ok(_) => {
                     let input = input.trim();
 

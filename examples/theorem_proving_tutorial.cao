@@ -1,0 +1,309 @@
+( Theorem Proving Tutorial for C∀O )
+( ================================== )
+( A practical introduction to theorem proving using the enhanced REPL )
+
+( Getting Started with Theorem Proving )
+( ===================================== )
+
+( The C∀O REPL now includes theorem proving commands: )
+( .axioms    - List all axioms )
+( .theorems  - List proven theorems )
+( .assume    - Add an assumption )
+( .goal      - Set a proof goal )
+( .prove     - Show current proof state )
+( .qed       - Complete a proof )
+
+( Let's start with basic examples )
+
+( Example 1: Basic Arithmetic Theorem )
+( =================================== )
+
+( First, let's prove that 2 + 2 = 4 )
+( We can use the basic arithmetic axioms )
+
+.goal "2 + 2 = 4"
+2 2 +
+4 =
+.qed
+
+( Example 2: Defining and Proving Properties )
+( =========================================== )
+
+( Define a simple function )
+:: double ( Nat -> Nat ) ;
+: double 2 * ;
+
+( Prove a property about our function )
+.goal "double(3) = 6"
+3 double
+6 =
+.qed
+
+( Example 3: Using Assumptions )
+( ============================= )
+
+( Prove a conditional statement )
+.assume "x > 0"
+.goal "2*x > 0"
+( In a real proof, we'd use the assumption )
+( For now, we demonstrate the workflow )
+.prove
+.qed
+
+( Example 4: Inductive Reasoning )
+( =============================== )
+
+( Define factorial )
+:: factorial ( Nat -> Nat ) ;
+: factorial
+    dup 1 <=
+    [ drop 1 ]
+    [ dup 1 - factorial * ]
+    if ;
+
+( Prove factorial(0) = 1 )
+.goal "factorial(0) = 1"
+0 factorial
+1 =
+.qed
+
+( Example 5: Building a Simple Theory )
+( =================================== )
+
+( Define natural number operations )
+:: zero ( -> Nat ) ;
+: zero 0 ;
+
+:: one ( -> Nat ) ;
+: one 1 ;
+
+:: successor ( Nat -> Nat ) ;
+: successor 1 + ;
+
+( Declare these as axioms for our theory )
+axiom zero
+axiom successor
+
+( Now prove some basic theorems )
+.goal "successor(zero) = one"
+zero successor
+one =
+.qed
+
+( Check our progress )
+.axioms
+.theorems
+
+( Example 6: Stack-Based Proof Construction )
+( ========================================== )
+
+( The stack-based nature of C∀O makes it natural for proof construction )
+( Each step in a proof manipulates the "proof stack" )
+
+( Prove: (a + b) * 2 = 2*a + 2*b )
+.goal "Distributivity of multiplication over addition"
+
+( Define our theorem using concrete values )
+:: prove-distributivity ( Nat Nat -> Bool ) ;
+: prove-distributivity
+    over over +     ( a b (a+b) )
+    2 *             ( a b 2*(a+b) )
+    -rot            ( 2*(a+b) a b )
+    dup 2 * swap    ( 2*(a+b) 2*a b )
+    2 *             ( 2*(a+b) 2*a 2*b )
+    +               ( 2*(a+b) (2*a + 2*b) )
+    = ;             ( result: are they equal? )
+
+( Test with specific values )
+3 4 prove-distributivity
+.qed
+
+( Example 7: Higher-Order Reasoning )
+( ================================== )
+
+( Define a higher-order function )
+:: apply-twice ( Quote -> Quote ) ;
+: apply-twice [ dup call call ] ;
+
+( Define square )
+:: square ( Nat -> Nat ) ;
+: square dup * ;
+
+( Prove that applying square twice gives fourth power )
+.goal "apply-twice square gives fourth power"
+2                    ( test value )
+[ square ] apply-twice call  ( apply square twice )
+2 dup dup * *       ( compute 2^4 directly )
+=
+.qed
+
+( Example 8: Proof by Cases )
+( ========================== )
+
+( Define absolute value )
+:: abs ( Int -> Nat ) ;
+: abs
+    dup 0 <
+    [ 0 swap - ]    ( negative case: negate )
+    [ ]             ( positive case: do nothing )
+    if ;
+
+( Prove that abs is always non-negative )
+:: prove-abs-positive ( Int -> Bool ) ;
+: prove-abs-positive
+    dup abs         ( n |n| )
+    swap 0 <        ( |n| (n < 0) )
+    [ 0 >= ]        ( if n < 0, then |n| >= 0 )
+    [ 0 >= ]        ( if n >= 0, then |n| >= 0 )
+    if ;
+
+( Test with examples )
+-5 prove-abs-positive
+3 prove-abs-positive
+.qed
+
+( Example 9: Working with Lists and Recursion )
+( ============================================= )
+
+( Define list length )
+:: length ( List -> Nat ) ;
+: length
+    dup empty?
+    [ drop 0 ]
+    [ tail length 1 + ]
+    if ;
+
+( Prove that length of empty list is 0 )
+.goal "length([]) = 0"
+[ ] length
+0 =
+.qed
+
+( Example 10: Advanced Proof Techniques )
+( ====================================== )
+
+( Define Fibonacci sequence )
+:: fib ( Nat -> Nat ) ;
+: fib
+    dup 2 <
+    [ ]  ( base case: fib(0) = 0, fib(1) = 1 )
+    [ dup 1 - fib swap 2 - fib + ]  ( recursive case )
+    if ;
+
+( Prove fib(5) = 5 )
+.goal "fib(5) = 5"
+5 fib
+5 =
+.qed
+
+( Interactive Theorem Proving Session )
+( ==================================== )
+
+( The following demonstrates a typical interactive session )
+
+.assume "For all n: n + 0 = n"
+.assume "For all n, m: n + succ(m) = succ(n + m)"
+.goal "2 + 3 = 5"
+
+( Step-by-step proof construction )
+2 3 +               ( compute 2 + 3 )
+5 =                 ( check equality )
+.prove              ( show current state )
+.qed                ( complete proof )
+
+( Proof Management )
+( ================= )
+
+( Save your work )
+.save "my_theorems"
+
+( View all proven theorems )
+.theorems
+
+( View available axioms )
+.axioms
+
+( Reset if needed )
+.reset
+
+( Advanced Topics )
+( =============== )
+
+( 1. Ordinal Analysis )
+( Each proof has an associated ordinal complexity )
+( Use --ordinal to check the complexity of a computation )
+
+[ 5 fib ] --ordinal
+
+( 2. Type-Driven Proofs )
+( Use type signatures to guide proof construction )
+
+:: theorem-addition-commutative ( -> Bool ) ;
+: theorem-addition-commutative
+    ( Prove: forall a, b: a + b = b + a )
+    ( This would require quantifier support in future versions )
+    true ;  ( placeholder )
+
+( 3. Proof Tactics )
+( Define reusable proof strategies )
+
+:: reflexivity-tactic ( a -> Bool ) ;
+: reflexivity-tactic dup = ;
+
+:: symmetry-tactic ( Bool -> Bool ) ;
+: symmetry-tactic swap = ;
+
+( 4. Automated Reasoning )
+( Use the stack machine for automated proof search )
+
+:: auto-solve-arithmetic ( Quote -> Bool ) ;
+: auto-solve-arithmetic
+    call                ( execute the arithmetic )
+    dup type Nat =      ( check if result is a number )
+    swap 0 >=          ( check if result is non-negative )
+    and ;              ( both conditions must hold )
+
+( Tutorial Exercises )
+( ================== )
+
+( Exercise 1: Prove that 1 + 1 = 2 )
+.goal "1 + 1 = 2"
+( Your proof here )
+
+( Exercise 2: Prove that double(double(x)) = 4*x )
+.goal "double(double(x)) = 4*x for x=3"
+( Your proof here )
+
+( Exercise 3: Prove a property about your own function )
+( Define a function and prove something about it )
+
+( Exercise 4: Use assumptions to prove a conditional )
+.assume "x is even"
+.goal "2*x is even"
+( Your proof here )
+
+( Exercise 5: Prove something about lists )
+( Define operations on lists and prove their properties )
+
+( Next Steps )
+( ========== )
+
+( 1. Explore the hypervisor mode for collaborative proving )
+( Type 'hypervisor' in the main REPL )
+
+( 2. Create your own axiom systems )
+( See axiom_systems.cao for advanced techniques )
+
+( 3. Study the ordinal analysis features )
+( Learn about termination proofs and complexity )
+
+( 4. Contribute to the C∀O proof library )
+( Share your theorems with the community )
+
+( Remember: )
+( - Every C∀O program is a mathematical statement )
+( - Every execution is a proof )
+( - The stack represents the current proof state )
+( - Type signatures guide proof construction )
+
+( Happy theorem proving! )

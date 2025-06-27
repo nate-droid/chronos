@@ -327,4 +327,4 @@
 
 "Welcome to the world of Chronos programming!" print
 
-quit
+.quit

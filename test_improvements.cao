@@ -1,0 +1,46 @@
+( Test file for new REPL improvements )
+
+( Test basic functionality )
+3 4 +
+.s
+
+( Test new builtin words )
+help
+words
+
+( Test arithmetic )
+5 dup *
+10 3 -
+
+( Test type signature declaration )
+:: double ( Nat -> Nat ) ;
+
+( Test word definition )
+: double 2 * ;
+
+( Test using the word )
+6 double
+
+( Test axiom declaration )
+axiom commutativity
+
+( Show current state )
+.s
+.words
+.types
+
+( Test theorem proving commands )
+.axioms
+.theorems
+.assume "P -> Q"
+.goal "Q"
+.prove
+.qed
+
+( Test stack operations )
+1 2 3
+dup
+swap
+over
+rot
+.s

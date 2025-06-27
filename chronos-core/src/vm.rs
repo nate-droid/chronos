@@ -147,7 +147,11 @@ impl VirtualMachine {
         // System words
         self.define_builtin(".", vec![Type::Variable("a".to_string())], vec![]);
         self.define_builtin(".s", vec![], vec![]);
+        self.define_builtin("print", vec![Type::Variable("a".to_string())], vec![]);
         self.define_builtin("--ordinal", vec![Type::Quote], vec![Type::Ordinal]);
+
+        // String operations
+        self.define_builtin("print-string", vec![Type::String], vec![]);
     }
 
     /// Define a builtin word with its type signature
@@ -199,6 +203,10 @@ impl VirtualMachine {
             }
             Token::Word(word) => self.execute_word(word),
             Token::MatchExpression { value, arms } => self.execute_match_expression(value, arms),
+            Token::Comment(_) => {
+                // Comments are ignored during execution
+                Ok(())
+            }
             _ => Err(VmError::InvalidOperation(format!(
                 "Cannot execute token: {:?}",
                 token
@@ -249,6 +257,7 @@ impl VirtualMachine {
             // System
             "." => self.builtin_dot(),
             ".s" => self.builtin_dot_s(),
+            "print" => self.builtin_print(),
             "--ordinal" => self.builtin_ordinal(),
 
             // Polymorphic type constructors
@@ -483,6 +492,19 @@ impl VirtualMachine {
             print!("{} ", value);
         }
         println!();
+        Ok(())
+    }
+
+    /// Print a value (like . but for strings/words)
+    fn builtin_print(&mut self) -> Result<(), VmError> {
+        let value = self.pop()?;
+        match value {
+            Value::String(s) => println!("{}", s),
+            Value::Nat(n) => println!("{}", n),
+            Value::Bool(b) => println!("{}", b),
+            Value::Unit => println!("()"),
+            _ => println!("{}", value),
+        }
         Ok(())
     }
 

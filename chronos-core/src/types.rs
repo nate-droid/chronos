@@ -16,6 +16,8 @@ pub enum Value {
     Bool(bool),
     /// Natural numbers (non-negative integers)
     Nat(u64),
+    /// String values
+    String(String),
     /// Ordinal values for proof-theoretic analysis
     Ordinal(OrdinalValue),
     /// Quoted code blocks (code as data)
@@ -110,7 +112,9 @@ pub enum Type {
     Bool,
     /// Natural number type
     Nat,
-    /// Ordinal type
+    /// String type
+    String,
+    /// Ordinal type for proof analysis
     Ordinal,
     /// Quotation type (code blocks)
     Quote,
@@ -161,6 +165,7 @@ impl fmt::Display for Value {
             Value::Unit => write!(f, "()"),
             Value::Bool(b) => write!(f, "{}", b),
             Value::Nat(n) => write!(f, "{}", n),
+            Value::String(s) => write!(f, "{}", s),
             Value::Ordinal(ord) => write!(f, "{}", ord),
             Value::Quote(tokens) => {
                 write!(f, "[ ")?;
@@ -247,6 +252,7 @@ impl fmt::Display for Type {
             Type::Unit => write!(f, "Unit"),
             Type::Bool => write!(f, "Bool"),
             Type::Nat => write!(f, "Nat"),
+            Type::String => write!(f, "String"),
             Type::Ordinal => write!(f, "Ordinal"),
             Type::Quote => write!(f, "Quote"),
             Type::Composite { name, fields } => {

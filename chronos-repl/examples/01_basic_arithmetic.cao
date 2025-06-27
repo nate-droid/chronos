@@ -141,4 +141,4 @@ rot  ( Moves third element to top )
 ( :: triple ( Nat -> Nat ) ; : triple 3 * ; )
 ( :: sum_of_squares ( Nat Nat -> Nat ) ; : sum_of_squares dup * swap dup * + ; )
 
-quit
+.quit

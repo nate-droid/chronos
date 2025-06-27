@@ -4,7 +4,7 @@
 //! including syntax highlighting, colorized output, and structured formatting.
 
 use chronos_core::Value;
-use console::{Color, style};
+use console::{style, Color};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -183,6 +183,7 @@ fn format_value_colored(value: &Value, config: &DisplayConfig, scheme: &ColorSch
         Value::Unit => display_str,
         Value::Nat(_) => style(display_str).fg(scheme.number).to_string(),
         Value::Bool(_) => style(display_str).fg(scheme.keyword).to_string(),
+        Value::String(_) => style(display_str).fg(scheme.string).to_string(),
         Value::Quote(_) => style(display_str).fg(scheme.string).to_string(),
         Value::Ordinal(_) => style(display_str).fg(scheme.number).to_string(),
         Value::Composite { .. } => style(display_str).fg(scheme.type_info).to_string(),
@@ -198,6 +199,7 @@ fn get_value_type_string(value: &Value) -> String {
         Value::Unit => "Unit".to_string(),
         Value::Bool(_) => "Bool".to_string(),
         Value::Nat(_) => "Nat".to_string(),
+        Value::String(_) => "String".to_string(),
         Value::Quote(_) => "Quote".to_string(),
         Value::Ordinal(_) => "Ordinal".to_string(),
         Value::Composite { type_name, .. } => type_name.clone(),

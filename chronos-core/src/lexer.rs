@@ -232,9 +232,7 @@ impl<'a> Lexer<'a> {
             match ch {
                 '"' => {
                     self.advance(); // skip closing quote
-                    // For now, treat strings as words for simplicity
-                    // In a full implementation, we'd need a String type
-                    return Ok(Token::Word(string_content));
+                    return Ok(Token::Literal(Value::String(string_content)));
                 }
                 '\\' => {
                     self.advance();
