@@ -1,264 +1,201 @@
-# Chronos: An Evolving Axiomatic Programming Language
+# Chronos: C∀O Programming Language
 
-**C∀O (Kao)** - *Categorical ∀xiomatic Ordinal*
+> **C∀O (Kao)** - *Categorical ∀xiomatic Ordinal*
 
-## Vision
+A revolutionary programming language that evolves through mathematical proof and community collaboration.
 
-Chronos was originally designed as an attempt to create a new sort of environment to explore topics like evolutionary 
-algorithms, metaprogramming, and grammar design that would potentially lend itself for AI agents to digest and parse 
-better. This will be built on the foundation of topics like Category Theory, Ordinal Analysis, and 
-concatenative programming paradigms.
+[![Rust](https://img.shields.io/badge/rust-2024-orange.svg)](https://rustlang.org)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-alpha-yellow.svg)](PROJECT_STATUS.md)
 
+## 🚀 What Makes Chronos Special?
 
-## Core Principles
+- **📚 Mathematically Rigorous**: Built on Category Theory and Ordinal Analysis
+- **🧬 Self-Evolving**: Programs can modify and improve themselves
+- **🤝 Collaborative**: Community-driven language evolution with proof verification
+- **📏 Stack-Based**: Concatenative syntax for interactive development
+- **✅ Termination Guaranteed**: Every program provably terminates
 
-- **Categorical Foundation**: Types are objects, functions are morphisms
-- **Metaprogramming**: Programs can manipulate and evolve themselves
-- **Ordinal Analysis**: Every definition has a proof of termination and consistency
-- **Ordinal Verification**: Guaranteed termination and consistency through proof theory
-- **Concatenative Core**: Stack-based, postfix syntax promoting interactive development
-- **Axiomatic Extensibility**: User-defined types and axioms with proof verification
+## ⚡ Quick Start
 
-## Quick Start
+Get up and running in 30 seconds:
 
-TODO!
-
-## Crate layout
-
-- `chronos-core` - The core library containing the C∀O language implementation, including the parser, stack machine, and core types/words.
-- `chronos-repl` - The REPL (Read-Eval-Print Loop) for interactive development, allowing users to enter C∀O code and see results immediately.
-
-## The C∀O Language Specification
-
-### Execution Model
-
-C∀O is a concatenative (postfix) language operating on a data stack. Words are space-delimited and executed left-to-right.
-
-```
-3 4 +    ( pushes 3, then 4, then executes +, resulting in 7 )
-```
-
-### Syntax Elements
-
-#### Comments
-```
-( This is a comment )
-( Comments are enclosed in parentheses )
-```
-
-#### Word Definition
-```
-: square ( n -> n*n ) dup * ;
-```
-
-#### Type Signatures
-Every user-defined word requires an explicit type signature:
-```
-:: square ( Nat -> Nat ) ;
-: square dup * ;
-```
-
-#### Type Definition
-New types are defined using the `type` keyword:
-```
-:: Point ( Nat Nat -> Point ) ;
-type Point { x::Nat, y::Nat }
-```
-
-#### Axiom Definition
-Unproven assertions accepted as true:
-```
-:: oracle ( -> Nat ) ;
-axiom oracle
-```
-
-### Core Types
-
-| Type | Description | Examples |
-|------|-------------|----------|
-| `Unit` | Terminal object | `()` |
-| `Bool` | Boolean values | `true`, `false` |
-| `Nat` | Natural numbers | `0`, `1`, `2`, ... |
-| `Ordinal` | Proof-theoretic ordinals | Used internally by system |
-| `Quote` | Code blocks as data | `[ dup * ]` |
-
-### Core Words
-
-#### Stack Manipulation
-- `dup` - Duplicate top stack element
-- `drop` - Remove top stack element
-- `swap` - Exchange top two elements
-- `over` - Copy second element to top
-- `rot` - Rotate three elements
-
-#### Control Flow
-- `if` - Conditional execution (consumes Bool and two Quotes)
-
-#### Arithmetic
-- `+`, `-`, `*` - Basic arithmetic for Nat
-
-#### System Words
-- `--ordinal` - Calculate ordinal cost of definition
-- `submit-to-hypervisor` - Submit definition for global verification
-
-### Example Programs
-
-#### Basic Arithmetic
-```
-: double ( n -> 2n ) 2 * ;
-:: double ( Nat -> Nat ) ;
-
-5 double    ( Result: 10 )
-```
-
-#### Conditional Logic
-```
-: abs ( n -> |n| )
-  dup 0 < [ 0 swap - ] [ ] if ;
-:: abs ( Int -> Nat ) ;
-```
-
-#### Working with Types
-```
-:: Point ( Nat Nat -> Point ) ;
-type Point { x::Nat, y::Nat }
-
-: distance-squared ( p1 p2 -> dist² )
-  ( Extract coordinates and calculate (x2-x1)² + (y2-y1)² )
-  ...implementation... ;
-:: distance-squared ( Point Point -> Nat ) ;
-```
-
-## System Architecture
-
-### The Ordinal Hypervisor (`chronosd`)
-
-The central authority ensuring global consistency:
-
-- **Master Theory Database**: Canonical store of verified definitions
-- **Validation Engine**: Ordinal Analysis proof checker
-
-### Evolutionary Cells (`kao-shell`)
-
-Interactive development environments:
-
-- **C∀O Runtime**: Parser, stack machine, core library
-- **Local Theory State**: Cached master theory + local definitions
-
-### Workflow Example
-
-1. **Bootstrap**: Cell registers with hypervisor, downloads master theory
-2. **Local Development**: User defines new functions locally
-   ```
-   : fibonacci ( n -> fib(n) )
-     dup 2 < [ ] [ dup 1 - fibonacci swap 2 - fibonacci + ] if ;
-   :: fibonacci ( Nat -> Nat ) ;
-   ```
-3. **Verification**: Local ordinal analysis ensures termination
-4. **Submission**:
-   ```
-   [ :: fibonacci ( Nat -> Nat ) ;
-     : fibonacci dup 2 < [ ] [ dup 1 - fibonacci swap 2 - fibonacci + ] if ;
-   ] submit-to-hypervisor
-   ```
-5. **Global Integration**: Hypervisor validates and broadcasts to all cells
-
-## Language Philosophy
-
-### Mathematical Foundations
-
-C∀O is built on solid mathematical principles:
-
-- **Category Theory**: Provides the structural foundation for types and functions
-- **Ordinal Analysis**: Ensures all programs terminate and the system remains consistent
-- **Constructive Logic**: Every proof corresponds to a computable function
-
-### Evolutionary Properties
-
-- **Collaborative Growth**: The language evolves through community contributions
-- **Verified Extensions**: All additions must pass rigorous proof requirements
-- **Backward Compatibility**: New definitions cannot break existing theory
-
-### Interactive Development
-
-The concatenative nature promotes:
-
-- **Immediate Feedback**: Every word can be tested interactively
-- **Compositional Thinking**: Complex programs built from simple, verified components
-- **Bottom-up Design**: Start with primitives, build complexity gradually
-
-## Implementation Roadmap
-
-### Phase 1: Standalone Core (`kao-core`)
-- [x] Basic project structure
-- [ ] Postfix parser implementation
-- [ ] Stack machine VM
-- [ ] Genesis axioms (core types/words)
-- [ ] Type checker for signatures
-- [ ] Mock ordinal verifier
-
-### Phase 2: Network Architecture
-- [ ] Hypervisor (`chronosd`) implementation
-- [ ] Cell communication integration
-- [ ] Definition submission system
-
-### Phase 3: Ordinal Verification
-- [ ] Ordinal notation system
-- [ ] Termination proof algorithm
-- [ ] True ordinal verifier
-- [ ] Integration with core system
-
-### Phase 4: Self-Evolution
-- [ ] First-class code manipulation
-- [ ] Metaprogramming capabilities
-- [ ] Automated evolution tools
-- [ ] Goal-oriented cells
-
-## Getting Started
-
-### Prerequisites
-- Rust 2024 edition
-- Basic understanding of stack-based languages
-
-### Installation
 ```bash
+# Clone and build
 git clone <repository-url>
 cd chronos
 cargo build
-```
 
-### Running Your First C∀O Session
-```bash
+# Start the interactive environment
 cargo run
 ```
 
-### Hello World Example
+### Your First C∀O Program
+
+```cao
+C∀O> 3 4 +                    # Basic arithmetic: 3 + 4 = 7
+C∀O> 5 dup *                  # Square a number: 5² = 25
+C∀O> : double 2 * ;           # Define a word
+C∀O> 6 double                 # Use it: 6 × 2 = 12
+C∀O> hypervisor               # Enter the hypervisor environment
 ```
-: hello ( -> ) "Hello, Chronos!" print ;
-:: hello ( -> Unit ) ;
-hello
+
+## 🏗️ Core Concepts
+
+### Stack-Based Programming
+C∀O uses postfix notation where operations follow their operands:
+```cao
+3 4 +        # Instead of 3 + 4
+5 dup *      # Square: duplicate 5, then multiply
 ```
 
-## Contributing
+### Mathematical Foundations
+Every function has a mathematical type and proof of termination:
+```cao
+:: square ( Nat -> Nat ) ;    # Type signature
+: square dup * ;              # Implementation
+```
 
-Chronos thrives on community contributions. To contribute:
+### Collaborative Evolution
+The language grows through community contributions that must pass mathematical verification:
+```cao
+[ :: fibonacci ( Nat -> Nat ) ;
+  : fibonacci dup 2 < [ ] [ dup 1 - fibonacci swap 2 - fibonacci + ] if ;
+] submit-to-hypervisor
+```
 
-1. Study the ordinal verification requirements
-2. Propose new axioms with mathematical justification
-3. Submit definitions through the verification process
-4. Help expand the core library
+## 🎯 Key Features
 
-## License
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Enhanced REPL** | Interactive development with debugging tools | ✅ Complete |
+| **Type Inference** | Automatic type detection with Hindley-Milner | ✅ Complete |
+| **Hypervisor Mode** | OS-like shell management environment | ✅ Complete |
+| **Session Management** | Save/load development sessions | ✅ Complete |
+| **Performance Monitoring** | Built-in benchmarking and profiling | ✅ Complete |
 
-Apache License 2.0
+## 🧠 Interactive Development
 
-## Inspiration Topics
+Chronos includes powerful development tools:
 
-- Category Theory for Programmers
-- Proof Theory and Ordinal Analysis
-- Concatenative Programming Languages
-- The Lean Theorem Prover
+```cao
+C∀O> .help                    # View all commands
+C∀O> .trace                   # Enable execution tracing
+C∀O> .benchmark "5 square" 100 # Performance testing
+C∀O> .save my-session         # Save your work
+C∀O> .infer square            # Show inferred types
+```
+
+## 🏭 Hypervisor Environment
+
+Launch container-like development shells:
+
+```cao
+hypervisor> run default my-shell    # Start a new shell
+hypervisor> ps                      # List running shells
+hypervisor> exec my-shell "3 4 +"   # Execute code in shell
+hypervisor> stats                   # View system statistics
+```
+
+## 📖 Language Reference
+
+### Basic Types
+- `Unit` - Terminal object `()`
+- `Bool` - Boolean values `true`, `false`
+- `Nat` - Natural numbers `0`, `1`, `2`, ...
+- `Quote` - Code blocks `[ dup * ]`
+
+### Stack Operations
+- `dup` - Duplicate top element
+- `drop` - Remove top element
+- `swap` - Exchange top two elements
+- `over` - Copy second element to top
+
+### Example: Fibonacci Sequence
+```cao
+:: fibonacci ( Nat -> Nat ) ;
+: fibonacci 
+  dup 2 < [ ] [ dup 1 - fibonacci swap 2 - fibonacci + ] if ;
+
+10 fibonacci    # Result: 55
+```
+
+## 🛠️ Project Structure
+
+```
+chronos/
+├── src/                  # Core implementation
+│   ├── repl.rs          # Interactive environment
+│   ├── hypervisor.rs    # Shell management
+│   ├── parser.rs        # Language parser
+│   ├── vm.rs           # Virtual machine
+│   └── types.rs        # Type system
+├── chronos-core/       # Core library
+├── chronos-repl/       # REPL implementation
+└── examples/           # Example programs
+```
+
+## 🎪 Live Examples
+
+Try these in the REPL:
+
+```cao
+# Mathematical operations
+C∀O> 2 3 4 + *                    # (3 + 4) × 2 = 14
+
+# Custom words
+C∀O> : circle-area dup * 314159 * 100000 / ;
+C∀O> 5 circle-area                # π × 5² ≈ 78
+
+# Conditional logic
+C∀O> : max over over > [ drop ] [ swap drop ] if ;
+C∀O> 7 3 max                      # Result: 7
+```
+
+## 🤖 AI-Friendly Design
+
+Chronos was designed with AI agents in mind:
+- **Parseable Syntax**: Simple, consistent grammar
+- **Mathematical Semantics**: Formal type system
+- **Interactive Exploration**: REPL-driven development
+- **Self-Documenting**: Built-in help and introspection
+
+## 🗺️ Roadmap
+
+- [x] **Phase 1**: Core language and REPL ✅
+- [x] **Phase 2A**: Type inference and hypervisor ✅
+- [ ] **Phase 2B**: Enhanced polymorphism 🚧
+- [ ] **Phase 3**: Network collaboration
+- [ ] **Phase 4**: Self-evolution capabilities
+
+## 🤝 Contributing
+
+Chronos thrives on community contributions! Here's how to get involved:
+
+1. **Explore**: Try the REPL and examples
+2. **Learn**: Read the [Implementation Guide](IMPLEMENTATION_GUIDE.md)
+3. **Contribute**: Submit new words and axioms
+4. **Collaborate**: Join the mathematical verification process
+
+See [PROJECT_STATUS.md](PROJECT_STATUS.md) for current development priorities.
+
+## 📚 Documentation
+
+- [**Project Status**](PROJECT_STATUS.md) - Current development state
+- [**Implementation Guide**](IMPLEMENTATION_GUIDE.md) - Developer workflow
+- [**Architecture Guide**](ARCHITECTURE_GUIDE.md) - Codebase overview
+- [**Development Roadmap**](DEVELOPMENT_ROADMAP.md) - Future plans
+
+## 📄 License
+
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
+
+## 🌟 Philosophy
+
+> *"In the beginning was the Word, and the Word was with Math, and the Word was Math."*
+
+Chronos represents a new paradigm where programming languages can evolve through mathematical proof, community collaboration, and AI-assisted development. Every line of code is a mathematical statement, every program a theorem, and every execution a proof.
 
 ---
 
-*"In the beginning was the Word, and the Word was with Math, and the Word was Math."*
+**Ready to explore the future of programming?** `cargo run` and start your journey! 🚀
