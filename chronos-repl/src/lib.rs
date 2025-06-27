@@ -60,6 +60,7 @@
 //! ```
 
 pub mod cellular_automata;
+pub mod codd_ca;
 pub mod commands;
 pub mod display;
 pub mod error;
@@ -72,6 +73,7 @@ pub use chronos_core::{ChronosCore, ChronosError, Token, Value};
 
 // Main exports
 pub use cellular_automata::{CAEnvironment, ElementaryCA, ElementaryRule};
+pub use codd_ca::{CoddCA, CoddEnvironment, CoddPatternType, CoddState};
 pub use error::{ReplError, Result};
 pub use repl::EnhancedRepl;
 pub use session::{Session, SessionData};

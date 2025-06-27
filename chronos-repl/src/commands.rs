@@ -82,6 +82,16 @@ pub enum ReplCommand {
     /// List famous CA rules
     CARules,
 
+    /// Codd's Cellular Automata Commands
+    /// Run Codd CA with simple output
+    CoddSimple(String, usize, usize, usize),
+
+    /// Launch interactive Codd CA environment
+    CoddInteractive(String, usize, usize),
+
+    /// List Codd CA patterns
+    CoddPatterns,
+
     /// Exit the REPL
     Quit,
 
@@ -276,6 +286,38 @@ pub fn parse_command(input: &str) -> ReplCommand {
         }
 
         "ca-rules" | "carules" => ReplCommand::CARules,
+
+        "codd-simple" | "coddsimple" => {
+            if parts.len() >= 5 {
+                if let (Ok(width), Ok(height), Ok(gens)) = (
+                    parts[2].parse::<usize>(),
+                    parts[3].parse::<usize>(),
+                    parts[4].parse::<usize>(),
+                ) {
+                    ReplCommand::CoddSimple(parts[1].to_string(), width, height, gens)
+                } else {
+                    ReplCommand::Unknown(input.to_string())
+                }
+            } else {
+                ReplCommand::Unknown(input.to_string())
+            }
+        }
+
+        "codd" => {
+            if parts.len() >= 4 {
+                if let (Ok(width), Ok(height)) =
+                    (parts[2].parse::<usize>(), parts[3].parse::<usize>())
+                {
+                    ReplCommand::CoddInteractive(parts[1].to_string(), width, height)
+                } else {
+                    ReplCommand::Unknown(input.to_string())
+                }
+            } else {
+                ReplCommand::Unknown(input.to_string())
+            }
+        }
+
+        "codd-patterns" | "coddpatterns" => ReplCommand::CoddPatterns,
 
         _ => ReplCommand::Unknown(input.to_string()),
     }
@@ -502,6 +544,57 @@ pub fn execute_command(
             Ok(result)
         }
 
+        ReplCommand::CoddSimple(pattern, width, height, generations) => {
+            use crate::codd_ca::{run_simple_codd_ca, CoddPatternType};
+
+            let pattern_type = match pattern.as_str() {
+                "empty" => CoddPatternType::Empty,
+                "signal" => CoddPatternType::Signal,
+                "replicator" => CoddPatternType::Replicator,
+                _ => {
+                    return Err(ReplError::command(
+                        "Invalid pattern. Use: empty, signal, or replicator",
+                    ))
+                }
+            };
+
+            let result = run_simple_codd_ca(pattern_type, generations, width, height)?;
+            Ok(result)
+        }
+
+        ReplCommand::CoddInteractive(pattern, width, height) => {
+            use crate::codd_ca::{CoddEnvironment, CoddPatternType};
+
+            let pattern_type = match pattern.as_str() {
+                "empty" => CoddPatternType::Empty,
+                "signal" => CoddPatternType::Signal,
+                "replicator" => CoddPatternType::Replicator,
+                _ => {
+                    return Err(ReplError::command(
+                        "Invalid pattern. Use: empty, signal, or replicator",
+                    ))
+                }
+            };
+
+            let mut env = CoddEnvironment::new(pattern_type, width, height);
+            env.run()?;
+            Ok("Codd's CA session ended".to_string())
+        }
+
+        ReplCommand::CoddPatterns => {
+            use crate::codd_ca::codd_patterns;
+            let patterns = codd_patterns();
+            let mut result = String::from("Codd's Cellular Automaton Patterns:\n\n");
+            for (pattern_type, description) in patterns {
+                result.push_str(&format!("{:?}: {}\n", pattern_type, description));
+            }
+            result.push_str("\nUse '.codd <pattern> <width> <height>' for interactive mode");
+            result.push_str(
+                "\nUse '.codd-simple <pattern> <width> <height> <generations>' for text output",
+            );
+            Ok(result)
+        }
+
         ReplCommand::Quit => Ok("Goodbye!".to_string()),
 
         ReplCommand::Unknown(cmd) => Err(ReplError::command(format!("Unknown command: {}", cmd))),
@@ -543,6 +636,11 @@ Cellular Automata:
   .ca-simple <rule> <gens>  - Text output CA evolution
   .ca-rule <rule>           - Show rule table for rule number
   .ca-rules                 - List famous CA rules
+
+Codd's Cellular Automata:
+  .codd <pattern> <width> <height>           - Interactive Codd CA
+  .codd-simple <pattern> <w> <h> <gens>      - Text output Codd CA
+  .codd-patterns                             - List Codd CA patterns
 
 Configuration:
   .set <key> <value> - Set configuration option
