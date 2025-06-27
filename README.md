@@ -181,6 +181,7 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for current development priorities.
 
 ## 📚 Documentation
 
+- [**Language Grammar**](docs/GRAMMAR.md) - Complete EBNF syntax specification
 - [**Project Status**](PROJECT_STATUS.md) - Current development state
 - [**Implementation Guide**](IMPLEMENTATION_GUIDE.md) - Developer workflow
 - [**Architecture Guide**](ARCHITECTURE_GUIDE.md) - Codebase overview
