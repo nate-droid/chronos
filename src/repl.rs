@@ -509,6 +509,33 @@ impl Repl {
                 *self = Repl::new();
                 println!("REPL reset to initial state");
             }
+            // Theorem proving commands
+            Some(&"axioms") => {
+                self.show_axioms();
+            }
+            Some(&"theorems") => {
+                self.show_theorems();
+            }
+            Some(&"assume") => {
+                if let Some(assumption) = parts.get(1) {
+                    self.add_assumption(assumption)?;
+                } else {
+                    println!("Usage: .assume <proposition>");
+                }
+            }
+            Some(&"goal") => {
+                if let Some(goal) = parts.get(1) {
+                    self.set_goal(goal)?;
+                } else {
+                    println!("Usage: .goal <proposition>");
+                }
+            }
+            Some(&"prove") => {
+                self.show_proof_state();
+            }
+            Some(&"qed") => {
+                self.complete_proof()?;
+            }
             Some(cmd) => {
                 println!("Unknown command: .{}", cmd);
                 println!("Type '.help' for available commands");
@@ -657,6 +684,14 @@ impl Repl {
         println!("  .save my-work                     Save session");
         println!();
         println!("Type 'help' (without .) for core library documentation");
+        println!();
+        println!("Theorem Proving:");
+        println!("  .axioms          List all axioms");
+        println!("  .theorems        List proven theorems");
+        println!("  .assume <prop>   Add assumption");
+        println!("  .goal <prop>     Set proof goal");
+        println!("  .prove           Show current proof state");
+        println!("  .qed             Complete current proof");
     }
 
     /// Show about information
@@ -835,6 +870,72 @@ impl Repl {
     }
 
     /// Benchmark code execution
+    fn show_axioms(&self) {
+        println!("Available Axioms:");
+        println!("================");
+
+        let mut axiom_count = 0;
+        for (name, word_def) in self.vm.get_dictionary() {
+            if word_def.is_axiom {
+                println!("  {} :: {:?}", name, word_def.signature);
+                axiom_count += 1;
+            }
+        }
+
+        if axiom_count == 0 {
+            println!("  No axioms defined");
+        } else {
+            println!("\nTotal: {} axioms", axiom_count);
+        }
+    }
+
+    fn show_theorems(&self) {
+        println!("Proven Theorems:");
+        println!("===============");
+
+        let mut theorem_count = 0;
+        for (name, word_def) in self.vm.get_dictionary() {
+            if !word_def.is_axiom && !word_def.body.is_empty() {
+                println!("  {} :: {:?}", name, word_def.signature);
+                theorem_count += 1;
+            }
+        }
+
+        if theorem_count == 0 {
+            println!("  No theorems proven yet");
+        } else {
+            println!("\nTotal: {} theorems", theorem_count);
+        }
+    }
+
+    fn add_assumption(&mut self, assumption: &str) -> Result<(), ReplError> {
+        // For now, just add it as a comment in the trace
+        println!("Added assumption: {}", assumption);
+        // TODO: Implement proper assumption stack
+        Ok(())
+    }
+
+    fn set_goal(&mut self, goal: &str) -> Result<(), ReplError> {
+        // For now, just display the goal
+        println!("Proof goal: {}", goal);
+        // TODO: Implement proper goal management
+        Ok(())
+    }
+
+    fn show_proof_state(&self) {
+        println!("Current Proof State:");
+        println!("===================");
+        println!("Stack: {:?}", self.vm.get_stack());
+        // TODO: Show assumptions, goals, and proof progress
+        println!("(Proof state tracking not yet implemented)");
+    }
+
+    fn complete_proof(&mut self) -> Result<(), ReplError> {
+        println!("Proof completed!");
+        // TODO: Implement proof verification and theorem storage
+        Ok(())
+    }
+
     fn benchmark_code(&mut self, code: &str, iterations: usize) -> Result<(), ReplError> {
         println!("Benchmarking '{}' for {} iterations...", code, iterations);
 

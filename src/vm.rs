@@ -178,6 +178,16 @@ impl VirtualMachine {
         &self.stack
     }
 
+    /// Get the current stack (alternative name for compatibility)
+    pub fn get_stack(&self) -> &[Value] {
+        &self.stack
+    }
+
+    /// Get access to the dictionary
+    pub fn get_dictionary(&self) -> &HashMap<String, WordDefinition> {
+        &self.dictionary
+    }
+
     /// Clear the stack
     pub fn clear_stack(&mut self) {
         self.stack.clear();
@@ -249,6 +259,8 @@ impl VirtualMachine {
             // System
             "." => self.builtin_dot(),
             ".s" => self.builtin_dot_s(),
+            "help" => self.builtin_help(),
+            "words" => self.builtin_words(),
             "--ordinal" => self.builtin_ordinal(),
 
             // Polymorphic type constructors
@@ -693,6 +705,111 @@ impl VirtualMachine {
         self.execute_match_expression(&value_token, &arms)?;
 
         println!("Pattern matching test completed");
+        Ok(())
+    }
+
+    fn builtin_help(&mut self) -> Result<(), VmError> {
+        println!("C∀O Core Library (Genesis Axioms)");
+        println!("==================================\n");
+
+        println!("Stack Manipulation:");
+        println!("  dup     ( a -> a a )        Duplicate top element");
+        println!("  drop    ( a -> )            Remove top element");
+        println!("  swap    ( a b -> b a )      Exchange top two");
+        println!("  over    ( a b -> a b a )    Copy second to top");
+        println!("  rot     ( a b c -> b c a )  Rotate three elements\n");
+
+        println!("Arithmetic:");
+        println!("  +       ( Nat Nat -> Nat )  Addition");
+        println!("  -       ( Nat Nat -> Nat )  Subtraction");
+        println!("  *       ( Nat Nat -> Nat )  Multiplication");
+        println!("  /       ( Nat Nat -> Nat )  Division\n");
+
+        println!("Comparison:");
+        println!("  =       ( a a -> Bool )     Equality test");
+        println!("  <       ( Nat Nat -> Bool ) Less than");
+        println!("  >       ( Nat Nat -> Bool ) Greater than\n");
+
+        println!("Control Flow:");
+        println!("  if      ( Bool Quote Quote -> ) Conditional");
+
+        println!("System:");
+        println!("  .       ( a -> )            Print value");
+        println!("  .s      ( -> )              Print stack");
+        println!("  words   ( -> )              List words");
+        println!("  help    ( -> )              Show this help");
+        println!("  --ordinal ( Quote -> Ordinal ) Ordinal cost\n");
+
+        println!("Polymorphic Constructors:");
+        println!("  Some    ( a -> Option<a> )  Create Some value");
+        println!("  None    ( -> Option<a> )    Create None value");
+        println!("  Ok      ( a -> Result<a,b> ) Create Ok value");
+        println!("  Err     ( b -> Result<a,b> ) Create Err value\n");
+
+        println!("Type '.help' for REPL commands");
+        Ok(())
+    }
+
+    fn builtin_words(&mut self) -> Result<(), VmError> {
+        println!("Available words:");
+        println!("===============\n");
+
+        println!("Core words (built-in):");
+        let mut core_words = vec![
+            "dup",
+            "drop",
+            "swap",
+            "over",
+            "rot",
+            "+",
+            "-",
+            "*",
+            "/",
+            "=",
+            "<",
+            ">",
+            "if",
+            ".",
+            ".s",
+            "help",
+            "words",
+            "--ordinal",
+            "Some",
+            "None",
+            "Ok",
+            "Err",
+            "list",
+            "test-pattern",
+        ];
+        core_words.sort();
+
+        for (i, word) in core_words.iter().enumerate() {
+            if i % 6 == 0 && i > 0 {
+                println!();
+            }
+            print!("{:<12}", word);
+        }
+        println!("\n");
+
+        if !self.dictionary.is_empty() {
+            println!("User-defined words:");
+            let mut user_words: Vec<_> = self.dictionary.keys().collect();
+            user_words.sort();
+
+            for (i, word) in user_words.iter().enumerate() {
+                if i % 6 == 0 && i > 0 {
+                    println!();
+                }
+                print!("{:<12}", word);
+            }
+            println!();
+        }
+
+        println!(
+            "\nTotal: {} core words, {} user-defined words",
+            core_words.len(),
+            self.dictionary.len()
+        );
         Ok(())
     }
 }
