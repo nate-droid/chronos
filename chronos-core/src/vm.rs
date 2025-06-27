@@ -57,19 +57,30 @@ pub struct VirtualMachine {
     call_stack: Vec<String>,
     /// Maximum recursion depth
     max_recursion_depth: usize,
+    /// Whether we're currently defining a word
+    defining_word: bool,
+    /// Name of the word being defined
+    current_word_name: Option<String>,
+    /// Tokens accumulated for the current word definition
+    current_definition: Vec<Token>,
+    /// Whether we're currently parsing a type signature
+    parsing_type_signature: bool,
 }
 
 impl VirtualMachine {
     /// Create a new virtual machine with core library
     pub fn new() -> Self {
-        let mut vm = VirtualMachine {
+        let mut vm = Self {
             stack: Vec::new(),
             dictionary: HashMap::new(),
             type_signatures: HashMap::new(),
             call_stack: Vec::new(),
-            max_recursion_depth: 1000,
+            max_recursion_depth: 100,
+            defining_word: false,
+            current_word_name: None,
+            current_definition: Vec::new(),
+            parsing_type_signature: false,
         };
-
         vm.load_core_library();
         vm
     }
@@ -196,6 +207,35 @@ impl VirtualMachine {
 
     /// Execute a single token
     pub fn execute_token(&mut self, token: &Token) -> Result<(), VmError> {
+        // If we're parsing a type signature, consume tokens until ;
+        if self.parsing_type_signature {
+            match token {
+                Token::Word(word) if word == ";" => {
+                    // End type signature
+                    self.parsing_type_signature = false;
+                }
+                _ => {
+                    // Ignore tokens in type signature
+                }
+            }
+            return Ok(());
+        }
+
+        // If we're in definition mode, collect tokens instead of executing them
+        if self.defining_word {
+            match token {
+                Token::Word(word) if word == ";" => {
+                    // End definition
+                    self.finish_word_definition()?;
+                }
+                _ => {
+                    // Add token to current definition
+                    self.current_definition.push(token.clone());
+                }
+            }
+            return Ok(());
+        }
+
         match token {
             Token::Literal(value) => {
                 self.push(value.clone());
@@ -233,6 +273,16 @@ impl VirtualMachine {
     /// Internal implementation of word execution
     fn execute_word_impl(&mut self, word: &str) -> Result<(), VmError> {
         match word {
+            // Word definition
+            "::" => {
+                // Type signature declaration - enter type signature mode
+                self.start_type_signature()
+            }
+            ":" => {
+                // Start word definition
+                self.start_word_definition()
+            }
+
             // Stack manipulation
             "dup" => self.builtin_dup(),
             "drop" => self.builtin_drop(),
@@ -285,9 +335,70 @@ impl VirtualMachine {
         }
     }
 
+    fn start_word_definition(&mut self) -> Result<(), VmError> {
+        if self.defining_word {
+            return Err(VmError::InvalidOperation(
+                "Already defining a word".to_string(),
+            ));
+        }
+
+        // The next token should be the word name, but we need to get it from the execution stream
+        // For now, we'll set a flag and handle the name when we see the next word token
+        self.defining_word = true;
+        self.current_definition.clear();
+        Ok(())
+    }
+
+    fn start_type_signature(&mut self) -> Result<(), VmError> {
+        if self.parsing_type_signature {
+            return Err(VmError::InvalidOperation(
+                "Already parsing a type signature".to_string(),
+            ));
+        }
+
+        self.parsing_type_signature = true;
+        Ok(())
+    }
+
+    fn finish_word_definition(&mut self) -> Result<(), VmError> {
+        if !self.defining_word {
+            return Err(VmError::InvalidOperation(
+                "Not currently defining a word".to_string(),
+            ));
+        }
+
+        let word_name = self.current_word_name.take().ok_or_else(|| {
+            VmError::InvalidOperation("No word name specified for definition".to_string())
+        })?;
+
+        let definition = WordDefinition {
+            name: word_name.clone(),
+            body: self.current_definition.clone(),
+            signature: TypeSignature {
+                inputs: vec![],
+                outputs: vec![],
+            },
+            is_axiom: false,
+            ordinal_cost: OrdinalValue::Finite(1),
+        };
+
+        self.dictionary.insert(word_name, definition);
+        self.defining_word = false;
+        self.current_definition.clear();
+
+        Ok(())
+    }
+
     /// Execute a sequence of tokens
     pub fn execute_tokens(&mut self, tokens: &[Token]) -> Result<(), VmError> {
         for token in tokens {
+            // Special handling for word names in definition mode
+            if self.defining_word && self.current_word_name.is_none() {
+                if let Token::Word(name) = token {
+                    self.current_word_name = Some(name.clone());
+                    continue;
+                }
+            }
             self.execute_token(token)?;
         }
         Ok(())
@@ -716,5 +827,10 @@ impl VirtualMachine {
 
         println!("Pattern matching test completed");
         Ok(())
+    }
+
+    /// Get all user-defined words from the dictionary
+    pub fn get_user_words(&self) -> Vec<String> {
+        self.dictionary.keys().cloned().collect()
     }
 }

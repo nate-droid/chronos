@@ -364,6 +364,9 @@ impl EnhancedRepl {
         self.session.update_stats(1, duration.as_millis() as u64, 0);
         self.session.update_stack(self.core.get_stack());
 
+        // Sync user-defined words from VM to session
+        self.sync_user_words();
+
         // Show timing if configured
         if self.config.show_timing {
             println!(
@@ -625,6 +628,19 @@ impl EnhancedRepl {
     /// Get mutable display configuration
     pub fn display_config_mut(&mut self) -> &mut DisplayConfig {
         &mut self.config.display
+    }
+
+    /// Synchronize user-defined words from the VM to the session
+    fn sync_user_words(&mut self) {
+        let user_words = self.core.get_user_words();
+        for word_name in user_words {
+            // For now, we'll store empty token sequences since we don't have access
+            // to the actual token sequence from the VM dictionary
+            // This is a simplified implementation - ideally we'd store the actual tokens
+            if !self.session.user_words().contains_key(&word_name) {
+                self.session.define_word(word_name, vec![]);
+            }
+        }
     }
 }
 

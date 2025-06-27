@@ -156,26 +156,67 @@ impl ChronosCore {
         self.vm.clear_stack();
     }
 
-    /// Get all defined words (simplified implementation)
+    /// Get all defined words including user-defined words
     pub fn get_words(&self) -> Vec<String> {
-        vec![
+        let mut words = vec![
             "dup".to_string(),
             "drop".to_string(),
             "swap".to_string(),
+            "over".to_string(),
+            "rot".to_string(),
             "+".to_string(),
             "-".to_string(),
-        ]
+            "*".to_string(),
+            "/".to_string(),
+            "=".to_string(),
+            "<".to_string(),
+            ">".to_string(),
+            "if".to_string(),
+            ".".to_string(),
+            ".s".to_string(),
+            "print".to_string(),
+        ];
+
+        // Add user-defined words
+        words.extend(self.vm.get_user_words());
+        words
     }
 
-    /// Check if a word is defined (simplified implementation)
-    pub fn is_word_defined(&self, _name: &str) -> bool {
-        true // Simplified for now
+    /// Check if a word is defined
+    pub fn is_word_defined(&self, name: &str) -> bool {
+        // Check built-in words
+        matches!(
+            name,
+            "dup"
+                | "drop"
+                | "swap"
+                | "over"
+                | "rot"
+                | "+"
+                | "-"
+                | "*"
+                | "/"
+                | "="
+                | "<"
+                | ">"
+                | "if"
+                | "."
+                | ".s"
+                | "print"
+                | "::"
+                | ":"
+        ) || self.vm.get_word_definition(name).is_some()
     }
 
     /// Reset the virtual machine to initial state
     pub fn reset(&mut self) {
         self.vm = VirtualMachine::new();
         // VM already loads its own core library
+    }
+
+    /// Get user-defined words from the VM
+    pub fn get_user_words(&self) -> Vec<String> {
+        self.vm.get_user_words()
     }
 
     /// Get documentation for a core word (simplified)

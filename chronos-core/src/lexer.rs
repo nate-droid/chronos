@@ -162,16 +162,24 @@ impl<'a> Lexer<'a> {
 
         let content = content.trim();
 
-        // Type signatures contain arrows (->) and type names (usually capitalized)
-        // Comments contain prose (multiple words, articles, etc.)
-        if content.contains("->") {
+        // Type signatures are very specific patterns: ( Type -> Type ) or ( Type Type -> Type )
+        // They contain arrows and usually follow specific naming conventions
+        if content.contains("->")
+            && content.split_whitespace().all(|word| {
+                word == "->"
+                    || word.chars().next().map_or(false, |c| c.is_uppercase())
+                    || word.chars().all(|c| c.is_ascii_uppercase())
+            })
+        {
             false // Likely a type signature
-        } else if content.split_whitespace().count() >= 3 {
-            // Multiple words suggest prose comment
-            true
         } else {
-            // Short content could be either - err on side of treating as non-comment
-            false
+            // Default to treating parentheses as comments
+            // This includes:
+            // - Visual separators like ========
+            // - Any prose text
+            // - Stack annotations like [1, 2, 3]
+            // - Short descriptive text
+            true
         }
     }
 
