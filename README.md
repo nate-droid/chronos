@@ -71,7 +71,7 @@ axiom oracle
 
 #### Stack Manipulation
 - `dup` - Duplicate top stack element
-- `drop` - Remove top stack element  
+- `drop` - Remove top stack element
 - `swap` - Exchange top two elements
 - `over` - Copy second element to top
 - `rot` - Rotate three elements
@@ -98,7 +98,7 @@ axiom oracle
 
 #### Conditional Logic
 ```
-: abs ( n -> |n| ) 
+: abs ( n -> |n| )
   dup 0 < [ 0 swap - ] [ ] if ;
 :: abs ( Int -> Nat ) ;
 ```
@@ -122,37 +122,28 @@ The central authority ensuring global consistency:
 
 - **Master Theory Database**: Canonical store of verified definitions
 - **Validation Engine**: Ordinal Analysis proof checker
-- **Communication API**: gRPC interface for cells
-
-#### Key API Endpoints
-```
-rpc RegisterCell(RegisterRequest) returns (RegisterResponse);
-rpc GetMasterTheory(TheoryRequest) returns (stream TheoryUpdate);
-rpc SubmitDefinition(DefinitionPackage) returns (ValidationResult);
-```
 
 ### Evolutionary Cells (`kao-shell`)
 
 Interactive development environments:
 
 - **C∀O Runtime**: Parser, stack machine, core library
-- **Local Theory State**: Cached master theory + local definitions  
-- **Hypervisor Client**: gRPC communication layer
+- **Local Theory State**: Cached master theory + local definitions
 
 ### Workflow Example
 
 1. **Bootstrap**: Cell registers with hypervisor, downloads master theory
 2. **Local Development**: User defines new functions locally
    ```
-   : fibonacci ( n -> fib(n) ) 
+   : fibonacci ( n -> fib(n) )
      dup 2 < [ ] [ dup 1 - fibonacci swap 2 - fibonacci + ] if ;
    :: fibonacci ( Nat -> Nat ) ;
    ```
 3. **Verification**: Local ordinal analysis ensures termination
-4. **Submission**: 
+4. **Submission**:
    ```
-   [ :: fibonacci ( Nat -> Nat ) ; 
-     : fibonacci dup 2 < [ ] [ dup 1 - fibonacci swap 2 - fibonacci + ] if ; 
+   [ :: fibonacci ( Nat -> Nat ) ;
+     : fibonacci dup 2 < [ ] [ dup 1 - fibonacci swap 2 - fibonacci + ] if ;
    ] submit-to-hypervisor
    ```
 5. **Global Integration**: Hypervisor validates and broadcasts to all cells
@@ -192,7 +183,6 @@ The concatenative nature promotes:
 - [ ] Mock ordinal verifier
 
 ### Phase 2: Network Architecture
-- [ ] gRPC schema definition
 - [ ] Hypervisor (`chronosd`) implementation
 - [ ] Cell communication integration
 - [ ] Definition submission system
@@ -205,7 +195,7 @@ The concatenative nature promotes:
 
 ### Phase 4: Self-Evolution
 - [ ] First-class code manipulation
-- [ ] Metaprogramming capabilities  
+- [ ] Metaprogramming capabilities
 - [ ] Automated evolution tools
 - [ ] Goal-oriented cells
 
@@ -245,9 +235,9 @@ Chronos thrives on community contributions. To contribute:
 
 ## License
 
-[License information to be determined]
+Apache License 2.0
 
-## References
+## Inspiration Topics
 
 - Category Theory for Programmers
 - Proof Theory and Ordinal Analysis
