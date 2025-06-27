@@ -4,14 +4,29 @@
 
 ## Vision
 
-Chronos is a revolutionary computing ecosystem where the programming language itself evolves through collaborative verification. It enables the growth of complex, provably correct software systems from a minimal set of core mathematical truths, combining Category Theory, Ordinal Analysis, and concatenative programming paradigms.
+Chronos was originally designed as an attempt to create a new sort of environment to explore topics like evolutionary 
+algorithms, metaprogramming, and grammar design that would potentially lend itself for AI agents to digest and parse 
+better. This will be built on the foundation of topics like Category Theory, Ordinal Analysis, and 
+concatenative programming paradigms.
+
 
 ## Core Principles
 
 - **Categorical Foundation**: Types are objects, functions are morphisms
+- **Metaprogramming**: Programs can manipulate and evolve themselves
+- **Ordinal Analysis**: Every definition has a proof of termination and consistency
 - **Ordinal Verification**: Guaranteed termination and consistency through proof theory
 - **Concatenative Core**: Stack-based, postfix syntax promoting interactive development
 - **Axiomatic Extensibility**: User-defined types and axioms with proof verification
+
+## Quick Start
+
+TODO!
+
+## Crate layout
+
+- `chronos-core` - The core library containing the C∀O language implementation, including the parser, stack machine, and core types/words.
+- `chronos-repl` - The REPL (Read-Eval-Print Loop) for interactive development, allowing users to enter C∀O code and see results immediately.
 
 ## The C∀O Language Specification
 
