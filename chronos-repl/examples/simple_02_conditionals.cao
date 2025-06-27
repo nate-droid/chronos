@@ -1,0 +1,301 @@
+( ========================================= )
+( Simple Conditionals - Current Implementation )
+( ========================================= )
+( This example demonstrates conditional logic )
+( in C∀O using the current implementation )
+( without type signatures or quote syntax. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/simple_02_conditionals.cao )
+
+( ========================================= )
+( Boolean Values )
+( ========================================= )
+
+( Push boolean values )
+true
+.s
+
+false
+.s
+
+( ========================================= )
+( Comparison Operations )
+( ========================================= )
+
+( Clear stack )
+drop drop
+
+( Test equality )
+5 5 =
+.s
+
+( Test with different numbers )
+3 7 =
+.s
+
+( Test less than )
+drop drop
+3 5 <
+.s
+
+( Test greater than )
+5 3 >
+.s
+
+( ========================================= )
+( Simple Word Definitions for Logic )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Define a word to check if number is small )
+: is_small 10 < ;
+
+( Test it )
+5 is_small
+.s
+
+15 is_small
+.s
+
+( Define a word to check if numbers are equal )
+: equal = ;
+
+( Clear and test equality word )
+.s
+7 7 equal
+.s
+
+3 8 equal
+.s
+
+( ========================================= )
+( Maximum and Minimum Functions )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Define maximum of two numbers )
+( Note: simplified without full conditional syntax )
+: max_simple dup2 > ;
+
+( We need to work around the lack of full conditionals )
+( Let's define some helper words )
+
+: larger_first over over > ;
+
+( Test comparison )
+10 5 larger_first
+.s
+
+( ========================================= )
+( Working with Stack for Decisions )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Build decision-making patterns )
+( Check if a number is positive )
+: is_positive 0 > ;
+
+( Test positive check )
+5 is_positive
+.s
+
+-3 is_positive
+.s
+
+( ========================================= )
+( Number Classification )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Define words to classify numbers )
+: is_zero 0 = ;
+: is_one 1 = ;
+: is_even 2 % 0 = ;
+
+( Test classifications )
+0 is_zero
+.s
+
+1 is_one
+.s
+
+.s
+4 is_even
+.s
+
+3 is_even
+.s
+
+( ========================================= )
+( Combining Conditions )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Define a word that checks multiple conditions )
+: is_small_and_even dup 10 < swap is_even ;
+
+( Test it )
+4 is_small_and_even
+.s
+
+( This puts both results on stack )
+
+( ========================================= )
+( Range Checking )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Check if number is in range 1-10 )
+: in_range_1_10 dup 1 >= swap 10 <= ;
+
+( Test range checking )
+5 in_range_1_10
+.s
+
+15 in_range_1_10
+.s
+
+( ========================================= )
+( Boolean Operations )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Since we don't have built-in boolean operations, )
+( we can simulate them with arithmetic )
+
+( AND operation using multiplication )
+: bool_and * ;
+
+( OR operation - if either is true (non-zero) )
+: bool_or + 0 > ;
+
+( Test boolean operations )
+true true bool_and
+.s
+
+true false bool_and
+.s
+
+.s
+true false bool_or
+.s
+
+false false bool_or
+.s
+
+( ========================================= )
+( Conditional Patterns )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Pattern: conditional execution )
+( Since full conditionals aren't available, )
+( we use stack manipulation for simple cases )
+
+( Define a word that returns 1 if positive, 0 if not )
+: sign_bit dup 0 > swap drop ;
+
+( Test sign detection )
+5 sign_bit
+.s
+
+0 sign_bit
+.s
+
+( ========================================= )
+( Absolute Value Simulation )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Simple absolute value for positive numbers )
+( (Real implementation would need full conditionals) )
+: abs_positive dup ;
+
+( Test with positive numbers )
+7 abs_positive
+.s
+
+( ========================================= )
+( Decision Making Patterns )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Pattern for choosing between two values )
+( based on a condition )
+: choose_first drop ;
+: choose_second swap drop ;
+
+( Example: choose the larger of two numbers )
+10 5 over over >
+
+( The boolean result can guide our choice )
+( This is a simplified pattern )
+
+( ========================================= )
+( Testing All Our Functions )
+( ========================================= )
+
+( Clear stack safely )
+.s
+
+( Test our classification functions )
+6 is_even
+.
+
+8 is_small
+.
+
+0 is_zero
+.
+
+( Test comparisons )
+10 20 <
+.
+
+15 10 >
+.
+
+( ========================================= )
+( Summary )
+( ========================================= )
+
+( Clear everything safely )
+.s
+
+( Put a summary value )
+42
+.s
+
+( Summary of conditional concepts: )
+( - Boolean values: true, false )
+( - Comparisons: =, <, > )
+( - Classification functions )
+( - Range checking patterns )
+( - Boolean operation simulation )
+( - Stack-based decision making )
+
+( Note: Full conditional syntax with 'if' )
+( requires quote support which isn't yet implemented )
+
+quit

@@ -1,0 +1,144 @@
+( ========================================= )
+( Basic Arithmetic and Stack Operations )
+( ========================================= )
+( This example demonstrates fundamental C∀O operations )
+( including arithmetic, stack manipulation, and basic )
+( word definitions. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/01_basic_arithmetic.cao )
+
+( ========================================= )
+( Simple Arithmetic )
+( ========================================= )
+
+( Let's start with basic arithmetic operations )
+( Push some numbers and add them )
+2 3 +
+.s  ( Show the stack - should contain [5] )
+
+( Multiply the result by 4 )
+4 *
+.s  ( Stack should now contain [20] )
+
+( Subtract 5 )
+5 -
+.s  ( Stack should contain [15] )
+
+( Clear the stack for next examples )
+.clear
+
+( ========================================= )
+( Stack Manipulation )
+( ========================================= )
+
+( Push several numbers )
+1 2 3 4 5
+.s  ( Stack: [1, 2, 3, 4, 5] with 5 on top )
+
+( Duplicate the top element )
+dup
+.s  ( Stack: [1, 2, 3, 4, 5, 5] )
+
+( Drop the top element )
+drop
+.s  ( Stack: [1, 2, 3, 4, 5] )
+
+( Swap the top two elements )
+swap
+.s  ( Stack: [1, 2, 3, 5, 4] )
+
+( Copy the second element to the top )
+over
+.s  ( Stack: [1, 2, 3, 5, 4, 5] )
+
+( Clear the stack again )
+.clear
+
+( ========================================= )
+( Defining Simple Words )
+( ========================================= )
+
+( Define a word to double a number )
+:: double ( Nat -> Nat ) ;
+: double 2 * ;
+
+( Test the double function )
+7 double
+.s  ( Should show [14] )
+
+( Define a word to square a number )
+:: square ( Nat -> Nat ) ;
+: square dup * ;
+
+( Test the square function )
+5 square
+.s  ( Should show [14, 25] )
+
+( Define a word to calculate x² + 1 )
+:: square_plus_one ( Nat -> Nat ) ;
+: square_plus_one dup * 1 + ;
+
+( Test it )
+4 square_plus_one
+.s  ( Should show [14, 25, 17] )
+
+( ========================================= )
+( Combining Operations )
+( ========================================= )
+
+( Clear and try some compound operations )
+.clear
+
+( Calculate (3 + 4) * (5 - 2) )
+3 4 +    ( Stack: [7] )
+5 2 -    ( Stack: [7, 3] )
+*        ( Stack: [21] )
+.s
+
+( Define a word for the average of two numbers )
+:: average ( Nat Nat -> Nat ) ;
+: average + 2 / ;
+
+( Test averaging )
+.clear
+10 20 average
+.s  ( Should show [15] )
+
+( ========================================= )
+( Working with Stack Depth )
+( ========================================= )
+
+( Build up a deeper stack )
+.clear
+1 2 3 4 5 6 7 8 9 10
+.s  ( Stack with 10 elements )
+
+( Use rot to cycle the top three elements )
+rot  ( Moves third element to top )
+.s
+
+( Define a word to show the stack depth )
+:: depth ( -> Nat ) ;
+: depth .s drop 0 ;  ( This is conceptual - actual implementation may vary )
+
+( ========================================= )
+( Cleanup and Summary )
+( ========================================= )
+
+.clear
+.words  ( Show all defined words )
+
+( Summary: )
+( - Basic arithmetic: +, -, * )
+( - Stack operations: dup, drop, swap, over, rot )
+( - Word definition: :: name ( types ) ; : name definition ; )
+( - Stack inspection: .s )
+( - Stack clearing: .clear )
+
+( Try defining your own words! )
+( Examples: )
+( :: triple ( Nat -> Nat ) ; : triple 3 * ; )
+( :: sum_of_squares ( Nat Nat -> Nat ) ; : sum_of_squares dup * swap dup * + ; )
+
+quit

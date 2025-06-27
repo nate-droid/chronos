@@ -1,0 +1,396 @@
+( ========================================= )
+( Data Types and Structures )
+( ========================================= )
+( This example demonstrates working with different )
+( data types, type definitions, and structured )
+( data in C∀O. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/04_data_types.cao )
+
+( ========================================= )
+( Core Data Types )
+( ========================================= )
+
+( Working with Unit type )
+()
+.s  ( Stack: [Unit] )
+
+( Working with Boolean values )
+true false
+.s  ( Stack: [Unit, true, false] )
+
+( Working with Natural numbers )
+0 1 42 1000
+.s  ( Stack: [Unit, true, false, 0, 1, 42, 1000] )
+
+.clear
+
+( ========================================= )
+( Quote Types (Code as Data) )
+( ========================================= )
+
+( Quotes represent code blocks as first-class data )
+[ 2 3 + ]
+.s  ( Stack contains a quote )
+
+( Execute a quote )
+[ 5 dup * ] call
+.s  ( Should show [25] )
+
+.clear
+
+( Store multiple quotes )
+[ 1 + ] [ 2 * ] [ dup ]
+.s  ( Stack: [increment, double, duplicate] )
+
+.clear
+
+( ========================================= )
+( Defining Custom Types )
+( ========================================= )
+
+( Define a Point type with x and y coordinates )
+:: Point ( Nat Nat -> Point ) ;
+type Point { x::Nat, y::Nat }
+
+( Create Point construction word )
+:: make_point ( Nat Nat -> Point ) ;
+: make_point Point ;
+
+( Create some points )
+3 4 make_point
+.s  ( Stack: [Point(3,4)] )
+
+0 0 make_point
+.s  ( Stack: [Point(3,4), Point(0,0)] )
+
+.clear
+
+( ========================================= )
+( Working with Point Operations )
+( ========================================= )
+
+( Define point accessors )
+:: point_x ( Point -> Nat ) ;
+: point_x .x ;  ( Extract x field )
+
+:: point_y ( Point -> Nat ) ;
+: point_y .y ;  ( Extract y field )
+
+( Test point operations )
+5 7 make_point
+dup point_x
+.s  ( Should show [Point(5,7), 5] )
+
+point_y
+.s  ( Should show [5, 7] )
+
+.clear
+
+( Define point arithmetic )
+:: point_add ( Point Point -> Point ) ;
+: point_add
+  over point_x over point_x +  ( x1 + x2 )
+  rot point_y rot point_y +    ( y1 + y2 )
+  make_point ;
+
+( Test point addition )
+1 2 make_point
+3 4 make_point
+point_add
+.s  ( Should show [Point(4,6)] )
+
+.clear
+
+( ========================================= )
+( Complex Number Type )
+( ========================================= )
+
+( Define complex numbers )
+:: Complex ( Nat Nat -> Complex ) ;
+type Complex { real::Nat, imag::Nat }
+
+:: make_complex ( Nat Nat -> Complex ) ;
+: make_complex Complex ;
+
+( Create complex numbers )
+3 4 make_complex  ( 3 + 4i )
+.s
+
+1 0 make_complex  ( Real number 1 + 0i )
+.s
+
+.clear
+
+( Complex number operations )
+:: complex_real ( Complex -> Nat ) ;
+: complex_real .real ;
+
+:: complex_imag ( Complex -> Nat ) ;
+: complex_imag .imag ;
+
+:: complex_add ( Complex Complex -> Complex ) ;
+: complex_add
+  over complex_real over complex_real +
+  rot complex_imag rot complex_imag +
+  make_complex ;
+
+( Test complex addition )
+2 3 make_complex
+1 4 make_complex
+complex_add
+.s  ( Should show [Complex(3,7)] )
+
+.clear
+
+( ========================================= )
+( List-like Structures )
+( ========================================= )
+
+( Define a simple pair type )
+:: Pair ( Nat Nat -> Pair ) ;
+type Pair { first::Nat, second::Nat }
+
+:: make_pair ( Nat Nat -> Pair ) ;
+: make_pair Pair ;
+
+:: pair_first ( Pair -> Nat ) ;
+: pair_first .first ;
+
+:: pair_second ( Pair -> Nat ) ;
+: pair_second .second ;
+
+( Create and manipulate pairs )
+10 20 make_pair
+dup pair_first
+.s
+
+dup pair_second
+.s
+
+.clear
+
+( ========================================= )
+( Option/Maybe Type Pattern )
+( ========================================= )
+
+( Define optional value type )
+:: Some ( Nat -> Option ) ;
+type Some { value::Nat }
+
+:: None ( -> Option ) ;
+type None { }
+
+:: make_some ( Nat -> Option ) ;
+: make_some Some ;
+
+:: make_none ( -> Option ) ;
+: make_none None ;
+
+( Option operations )
+:: is_some ( Option -> Bool ) ;
+: is_some typeof "Some" = ;
+
+:: is_none ( Option -> Bool ) ;
+: is_none typeof "None" = ;
+
+:: unwrap ( Option -> Nat ) ;
+: unwrap .value ;
+
+( Test optional values )
+42 make_some
+dup is_some
+.s  ( Should show [Some(42), true] )
+
+make_none
+dup is_none
+.s  ( Should show [Some(42), true, None, true] )
+
+.clear
+
+( ========================================= )
+( Result Type Pattern )
+( ========================================= )
+
+( Define result type for error handling )
+:: Ok ( Nat -> Result ) ;
+type Ok { value::Nat }
+
+:: Err ( Nat -> Result ) ;  ( Error code as Nat )
+type Err { code::Nat }
+
+:: make_ok ( Nat -> Result ) ;
+: make_ok Ok ;
+
+:: make_err ( Nat -> Result ) ;
+: make_err Err ;
+
+:: is_ok ( Result -> Bool ) ;
+: is_ok typeof "Ok" = ;
+
+:: is_err ( Result -> Bool ) ;
+: is_err typeof "Err" = ;
+
+( Safe division that returns Result )
+:: safe_div ( Nat Nat -> Result ) ;
+: safe_div dup 0 = [ drop drop 1 make_err ] [ / make_ok ] if ;
+
+( Test safe division )
+10 2 safe_div
+dup is_ok
+.s  ( Should show [Ok(5), true] )
+
+10 0 safe_div
+dup is_err
+.s  ( Should show [Ok(5), true, Err(1), true] )
+
+.clear
+
+( ========================================= )
+( Color Enumeration )
+( ========================================= )
+
+( Define color enumeration )
+:: Red ( -> Color ) ;
+type Red { }
+
+:: Green ( -> Color ) ;
+type Green { }
+
+:: Blue ( -> Color ) ;
+type Blue { }
+
+:: make_red ( -> Color ) ;
+: make_red Red ;
+
+:: make_green ( -> Color ) ;
+: make_green Green ;
+
+:: make_blue ( -> Color ) ;
+: make_blue Blue ;
+
+( Color operations )
+:: color_to_number ( Color -> Nat ) ;
+: color_to_number
+  dup typeof "Red" = [ drop 1 ] [
+    dup typeof "Green" = [ drop 2 ] [
+      drop 3  ( Blue )
+    ] if
+  ] if ;
+
+( Test colors )
+make_red color_to_number
+.s  ( Should show [1] )
+
+make_green color_to_number
+.s  ( Should show [1, 2] )
+
+make_blue color_to_number
+.s  ( Should show [1, 2, 3] )
+
+.clear
+
+( ========================================= )
+( Geometric Shapes )
+( ========================================= )
+
+( Define different shape types )
+:: Circle ( Nat -> Shape ) ;
+type Circle { radius::Nat }
+
+:: Rectangle ( Nat Nat -> Shape ) ;
+type Rectangle { width::Nat, height::Nat }
+
+:: Triangle ( Nat Nat Nat -> Shape ) ;
+type Triangle { a::Nat, b::Nat, c::Nat }
+
+( Shape constructors )
+:: make_circle ( Nat -> Shape ) ;
+: make_circle Circle ;
+
+:: make_rectangle ( Nat Nat -> Shape ) ;
+: make_rectangle Rectangle ;
+
+:: make_triangle ( Nat Nat Nat -> Shape ) ;
+: make_triangle Triangle ;
+
+( Calculate area (approximated for simplicity) )
+:: shape_area ( Shape -> Nat ) ;
+: shape_area
+  dup typeof "Circle" = [
+    .radius dup * 3 *  ( π ≈ 3 for simplicity )
+  ] [
+    dup typeof "Rectangle" = [
+      dup .width swap .height *
+    ] [
+      ( Triangle - using Heron's approximation )
+      dup .a over .b + over .c + 2 /  ( semi-perimeter )
+      .a *  ( simplified area calculation )
+    ] if
+  ] if ;
+
+( Test shape areas )
+5 make_circle shape_area
+.s  ( Circle area ≈ 75 )
+
+4 6 make_rectangle shape_area
+.s  ( Rectangle area = 24 )
+
+3 4 5 make_triangle shape_area
+.s  ( Triangle area ≈ 18 )
+
+.clear
+
+( ========================================= )
+( Type Checking and Validation )
+( ========================================= )
+
+( Define type validation functions )
+:: validate_point ( Point -> Bool ) ;
+: validate_point
+  dup point_x 0 >= swap point_y 0 >= and ;
+
+:: validate_circle ( Shape -> Bool ) ;
+: validate_circle
+  dup typeof "Circle" = [
+    .radius 0 >
+  ] [
+    drop false
+  ] if ;
+
+( Test validations )
+5 7 make_point validate_point
+.s  ( Should show [true] )
+
+3 make_circle validate_circle
+.s  ( Should show [true, true] )
+
+.clear
+
+( ========================================= )
+( Summary and Cleanup )
+( ========================================= )
+
+.words  ( Show all defined words and types )
+.types  ( Show all defined types )
+
+( Summary of type features demonstrated: )
+( - Core types: Unit, Bool, Nat, Quote )
+( - Custom type definition with 'type' keyword )
+( - Field access with dot notation )
+( - Type checking with 'typeof' )
+( - Constructor patterns )
+( - Algebraic data types (Option, Result) )
+( - Enumeration types )
+( - Composite types with multiple fields )
+( - Type validation functions )
+
+( Advanced patterns to explore: )
+( - Recursive data structures )
+( - Polymorphic types )
+( - Type constraints )
+( - Generic containers )
+( - State machines with types )
+
+quit

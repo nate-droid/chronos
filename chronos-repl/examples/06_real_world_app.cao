@@ -1,0 +1,451 @@
+( ========================================= )
+( Real-World Application: Calculator and Unit Converter )
+( ========================================= )
+( This example demonstrates a practical application )
+( built in C∀O: a scientific calculator with unit )
+( conversion capabilities. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/06_real_world_app.cao )
+
+( ========================================= )
+( Mathematical Constants and Utilities )
+( ========================================= )
+
+( Define mathematical constants )
+:: PI ( -> Nat ) ;
+: PI 314 ;  ( π * 100 for integer arithmetic )
+
+:: E ( -> Nat ) ;
+: E 271 ;   ( e * 100 for integer arithmetic )
+
+:: GOLDEN_RATIO ( -> Nat ) ;
+: GOLDEN_RATIO 161 ;  ( φ * 100 )
+
+( Scaling factor for fixed-point arithmetic )
+:: SCALE ( -> Nat ) ;
+: SCALE 100 ;
+
+( ========================================= )
+( Advanced Mathematical Functions )
+( ========================================= )
+
+( Square root approximation using Newton's method )
+:: sqrt_newton ( Nat Nat -> Nat ) ;
+: sqrt_newton
+  ( n guess -> better_guess )
+  over over / + 2 / ;
+
+:: sqrt ( Nat -> Nat ) ;
+: sqrt
+  dup 1 sqrt_newton
+  dup rot sqrt_newton
+  dup rot sqrt_newton
+  dup rot sqrt_newton
+  swap drop ;
+
+( Trigonometric approximations )
+:: sin_table ( Nat -> Nat ) ;
+: sin_table
+  ( Approximate sin using lookup table for 0-90 degrees )
+  dup 0 = [ drop 0 ] [
+    dup 30 = [ drop 50 ] [  ( sin(30°) ≈ 0.5 )
+      dup 45 = [ drop 70 ] [  ( sin(45°) ≈ 0.707 )
+        dup 60 = [ drop 86 ] [  ( sin(60°) ≈ 0.866 )
+          dup 90 = [ drop 100 ] [  ( sin(90°) = 1.0 )
+            drop 0  ( Default case )
+          ] if
+        ] if
+      ] if
+    ] if
+  ] if ;
+
+:: cos_table ( Nat -> Nat ) ;
+: cos_table
+  ( cos(x) = sin(90 - x) )
+  90 swap - sin_table ;
+
+( Logarithm approximation (base 2) )
+:: log2_approx ( Nat -> Nat ) ;
+: log2_approx
+  dup 1 = [ drop 0 ] [
+    dup 2 = [ drop 100 ] [  ( log₂(2) = 1.0 )
+      dup 4 = [ drop 200 ] [  ( log₂(4) = 2.0 )
+        dup 8 = [ drop 300 ] [  ( log₂(8) = 3.0 )
+          dup 16 = [ drop 400 ] [  ( log₂(16) = 4.0 )
+            ( Rough approximation for other values )
+            dup 10 < [ drop 50 ] [ drop 250 ] if
+          ] if
+        ] if
+      ] if
+    ] if
+  ] if ;
+
+( ========================================= )
+( Unit Conversion System )
+( ========================================= )
+
+( Define unit types )
+:: Length ( Nat Nat -> Length ) ;  ( value, unit_code )
+type Length { value::Nat, unit::Nat }
+
+:: Temperature ( Nat Nat -> Temperature ) ;
+type Temperature { value::Nat, unit::Nat }
+
+:: Weight ( Nat Nat -> Weight ) ;
+type Weight { value::Nat, unit::Nat }
+
+( Unit codes )
+:: MM ( -> Nat ) ; : MM 1 ;    ( millimeters )
+:: CM ( -> Nat ) ; : CM 2 ;    ( centimeters )
+:: M ( -> Nat ) ; : M 3 ;      ( meters )
+:: KM ( -> Nat ) ; : KM 4 ;    ( kilometers )
+:: IN ( -> Nat ) ; : IN 5 ;    ( inches )
+:: FT ( -> Nat ) ; : FT 6 ;    ( feet )
+
+:: CELSIUS ( -> Nat ) ; : CELSIUS 1 ;
+:: FAHRENHEIT ( -> Nat ) ; : FAHRENHEIT 2 ;
+:: KELVIN ( -> Nat ) ; : KELVIN 3 ;
+
+:: G ( -> Nat ) ; : G 1 ;      ( grams )
+:: KG ( -> Nat ) ; : KG 2 ;    ( kilograms )
+:: LB ( -> Nat ) ; : LB 3 ;    ( pounds )
+:: OZ ( -> Nat ) ; : OZ 4 ;    ( ounces )
+
+( Length conversions to millimeters )
+:: to_mm ( Length -> Nat ) ;
+: to_mm
+  dup .unit
+  dup MM = [ drop .value ] [
+    dup CM = [ drop .value 10 * ] [
+      dup M = [ drop .value 1000 * ] [
+        dup KM = [ drop .value 1000000 * ] [
+          dup IN = [ drop .value 254 10 / ] [  ( 25.4 mm/inch )
+            dup FT = [ drop .value 3048 10 / ] [  ( 304.8 mm/foot )
+              drop .value  ( default case )
+            ] if
+          ] if
+        ] if
+      ] if
+    ] if
+  ] if ;
+
+:: from_mm ( Nat Nat -> Length ) ;
+: from_mm
+  ( mm_value target_unit -> Length )
+  dup MM = [ Length ] [
+    dup CM = [ swap 10 / swap Length ] [
+      dup M = [ swap 1000 / swap Length ] [
+        dup KM = [ swap 1000000 / swap Length ] [
+          dup IN = [ swap 10 * 254 / swap Length ] [
+            dup FT = [ swap 10 * 3048 / swap Length ] [
+              Length  ( default case )
+            ] if
+          ] if
+        ] if
+      ] if
+    ] if
+  ] if ;
+
+:: convert_length ( Length Nat -> Length ) ;
+: convert_length
+  ( length target_unit -> converted_length )
+  swap to_mm swap from_mm ;
+
+( ========================================= )
+( Scientific Calculator Functions )
+( ========================================= )
+
+( Polynomial evaluation: ax³ + bx² + cx + d )
+:: cubic ( Nat Nat Nat Nat Nat -> Nat ) ;
+: cubic
+  ( a b c d x -> result )
+  dup dup dup    ( x x x x )
+  * *           ( x x³ )
+  rot * swap    ( ax³ x )
+  dup *         ( ax³ x² )
+  rot * +       ( ax³+bx² )
+  swap rot * +  ( ax³+bx²+cx )
+  + ;           ( ax³+bx²+cx+d )
+
+( Quadratic formula: (-b ± √(b²-4ac)) / 2a )
+:: quadratic_discriminant ( Nat Nat Nat -> Nat ) ;
+: quadratic_discriminant
+  ( a b c -> discriminant )
+  rot dup rot * 4 * * swap dup * swap - ;
+
+:: quadratic_root1 ( Nat Nat Nat -> Nat ) ;
+: quadratic_root1
+  ( a b c -> root1 )
+  over over quadratic_discriminant sqrt
+  rot 0 swap - +  ( -b + √discriminant )
+  swap 2 * / ;    ( divide by 2a )
+
+:: quadratic_root2 ( Nat Nat Nat -> Nat ) ;
+: quadratic_root2
+  ( a b c -> root2 )
+  over over quadratic_discriminant sqrt
+  rot 0 swap - swap -  ( -b - √discriminant )
+  swap 2 * / ;         ( divide by 2a )
+
+( Statistical functions )
+:: mean ( Nat Nat Nat -> Nat ) ;
+: mean + + 3 / ;
+
+:: variance_3 ( Nat Nat Nat -> Nat ) ;
+: variance_3
+  ( Calculate variance of three numbers )
+  over over mean  ( a b c mean )
+  dup rot dup rot - dup *  ( a b mean (a-mean)² )
+  rot dup rot - dup *      ( a mean (a-mean)² (b-mean)² )
+  rot rot - dup * +        ( (a-mean)² + (b-mean)² + (c-mean)² )
+  3 / ;                    ( divide by n )
+
+( ========================================= )
+( Financial Calculations )
+( ========================================= )
+
+( Simple interest: P * R * T / 100 )
+:: simple_interest ( Nat Nat Nat -> Nat ) ;
+: simple_interest * * 100 / ;
+
+( Compound interest: P * (1 + R/100)^T )
+:: compound_interest ( Nat Nat Nat -> Nat ) ;
+: compound_interest
+  ( principal rate time -> amount )
+  rot swap           ( rate time principal )
+  swap 100 + swap    ( rate (100+rate) principal time )
+  power * 100 / ;    ( principal * (1+rate/100)^time )
+
+( Monthly payment calculation )
+:: monthly_payment ( Nat Nat Nat -> Nat ) ;
+: monthly_payment
+  ( principal rate_percent months -> payment )
+  rot rot 1200 /     ( principal months monthly_rate )
+  dup 1 + rot power  ( principal monthly_rate (1+rate)^months )
+  dup 1 - rot *      ( principal (1+rate)^months rate*((1+rate)^months-1) )
+  / * ;              ( principal * rate*(1+rate)^months / ((1+rate)^months-1) )
+
+( ========================================= )
+( Physics and Engineering Calculations )
+( ========================================= )
+
+( Kinetic energy: ½mv² )
+:: kinetic_energy ( Nat Nat -> Nat ) ;
+: kinetic_energy dup * * 2 / ;
+
+( Potential energy: mgh )
+:: potential_energy ( Nat Nat Nat -> Nat ) ;
+: potential_energy * * ;
+
+( Force: ma )
+:: force ( Nat Nat -> Nat ) ;
+: force * ;
+
+( Power: work/time )
+:: power_calc ( Nat Nat -> Nat ) ;
+: power_calc / ;
+
+( Ohm's law calculations )
+:: voltage ( Nat Nat -> Nat ) ;
+: voltage * ;  ( V = I * R )
+
+:: current ( Nat Nat -> Nat ) ;
+: current / ;  ( I = V / R )
+
+:: resistance ( Nat Nat -> Nat ) ;
+: resistance / ;  ( R = V / I )
+
+:: power_electrical ( Nat Nat -> Nat ) ;
+: power_electrical * ;  ( P = V * I )
+
+( ========================================= )
+( Geometry and Area Calculations )
+( ========================================= )
+
+( Circle calculations )
+:: circle_area ( Nat -> Nat ) ;
+: circle_area dup * PI * 100 / ;
+
+:: circle_circumference ( Nat -> Nat ) ;
+: circle_circumference 2 * PI * 100 / ;
+
+( Rectangle calculations )
+:: rectangle_area ( Nat Nat -> Nat ) ;
+: rectangle_area * ;
+
+:: rectangle_perimeter ( Nat Nat -> Nat ) ;
+: rectangle_perimeter + 2 * ;
+
+( Triangle calculations )
+:: triangle_area ( Nat Nat -> Nat ) ;
+: triangle_area * 2 / ;
+
+:: triangle_perimeter ( Nat Nat Nat -> Nat ) ;
+: triangle_perimeter + + ;
+
+( Sphere calculations )
+:: sphere_volume ( Nat -> Nat ) ;
+: sphere_volume dup dup * * 4 * PI * 3 / 100 / ;
+
+:: sphere_surface_area ( Nat -> Nat ) ;
+: sphere_surface_area dup * 4 * PI * 100 / ;
+
+( ========================================= )
+( Application Interface )
+( ========================================= )
+
+( Calculator menu system )
+:: show_menu ( -> ) ;
+: show_menu
+  "=== Chronos Scientific Calculator ===" print
+  "1. Basic Arithmetic" print
+  "2. Advanced Math" print
+  "3. Unit Conversion" print
+  "4. Financial Calculations" print
+  "5. Physics/Engineering" print
+  "6. Geometry" print
+  "7. Statistics" print
+  "8. Exit" print
+  "Choose option (1-8): " print ;
+
+( Demonstration of calculator features )
+:: demo_calculator ( -> ) ;
+: demo_calculator
+  "=== Calculator Demo ===" print
+
+  "Testing basic arithmetic:" print
+  15 25 + "15 + 25 = " print . print
+
+  "Testing advanced math:" print
+  16 sqrt "√16 = " print . print
+
+  "Testing unit conversion:" print
+  100 CM M convert_length .value "100 cm = " print . print " meters" print
+
+  "Testing financial calculation:" print
+  1000 5 2 simple_interest "Simple interest on $1000 at 5% for 2 years = $" print . print
+
+  "Testing physics:" print
+  10 20 kinetic_energy "Kinetic energy (m=10, v=20) = " print . print
+
+  "Testing geometry:" print
+  5 circle_area "Area of circle (r=5) = " print . print
+
+  "Testing statistics:" print
+  10 20 30 mean "Mean of 10, 20, 30 = " print . print ;
+
+( ========================================= )
+( Data Validation and Error Handling )
+( ========================================= )
+
+:: validate_positive ( Nat -> Bool ) ;
+: validate_positive 0 > ;
+
+:: validate_range ( Nat Nat Nat -> Bool ) ;
+: validate_range
+  ( value min max -> is_valid )
+  rot dup rot >= swap rot <= and ;
+
+:: safe_divide ( Nat Nat -> Result ) ;
+: safe_divide
+  dup 0 = [ drop drop "Division by zero" make_err ] [
+    / make_ok
+  ] if ;
+
+:: safe_sqrt ( Nat -> Result ) ;
+: safe_sqrt
+  dup 0 < [ drop "Square root of negative number" make_err ] [
+    sqrt make_ok
+  ] if ;
+
+( ========================================= )
+( Application Testing Suite )
+( ========================================= )
+
+:: run_calculator_tests ( -> ) ;
+: run_calculator_tests
+  "=== Running Calculator Tests ===" print
+
+  ( Test basic arithmetic )
+  5 3 + 8 = "Addition test: " print . print
+
+  ( Test unit conversion )
+  100 CM to_mm 1000 = "CM to MM conversion: " print . print
+
+  ( Test financial calculations )
+  1000 10 1 simple_interest 100 = "Simple interest test: " print . print
+
+  ( Test geometry )
+  3 4 rectangle_area 12 = "Rectangle area test: " print . print
+
+  ( Test statistics )
+  10 20 30 mean 20 = "Mean calculation test: " print . print
+
+  "All tests completed!" print ;
+
+( ========================================= )
+( Main Application Entry Point )
+( ========================================= )
+
+:: main_app ( -> ) ;
+: main_app
+  "Welcome to Chronos Scientific Calculator!" print
+  "==========================================" print
+
+  demo_calculator
+  run_calculator_tests
+
+  "Calculator ready for interactive use!" print
+  "Use the defined functions for calculations." print
+  "Example: 100 CM M convert_length" print
+  "Example: 1000 5 2 simple_interest" print ;
+
+( ========================================= )
+( Run the Application )
+( ========================================= )
+
+( Clear screen and start )
+.clear
+main_app
+
+( Show available functions )
+.words
+
+( Interactive examples )
+"=== Interactive Examples ===" print
+
+( Unit conversion example )
+1000 MM CM convert_length
+"1000 mm in cm:" print
+.s
+
+.clear
+
+( Financial calculation example )
+5000 7 3 compound_interest
+"$5000 at 7% for 3 years (compound):" print
+.s
+
+.clear
+
+( Physics calculation example )
+50 10 kinetic_energy
+"Kinetic energy (m=50kg, v=10m/s):" print
+.s
+
+.clear
+
+( Geometry example )
+7 circle_area
+"Area of circle with radius 7:" print
+.s
+
+.clear
+
+"=== Calculator Ready for Interactive Use ===" print
+"Try: 25 sqrt" print
+"Try: 100 IN CM convert_length" print
+"Try: 2000 8 5 monthly_payment" print
+
+quit

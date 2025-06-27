@@ -1,0 +1,386 @@
+( ========================================= )
+( Interactive REPL Features and Debugging )
+( ========================================= )
+( This example demonstrates the powerful interactive )
+( features of the Chronos REPL, including debugging, )
+( session management, and performance monitoring. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/05_repl_features.cao )
+
+( ========================================= )
+( Basic REPL Commands )
+( ========================================= )
+
+( Display help information )
+.help
+
+( Show current stack contents )
+1 2 3 4 5
+.stack
+
+( Alternative stack display )
+.s
+
+( Clear the entire stack )
+.clear
+
+( Show all defined words )
+.words
+
+( Show type information )
+.types
+
+( ========================================= )
+( Stack Inspection and Manipulation )
+( ========================================= )
+
+( Build up a test stack )
+10 20 30 40 50
+.s
+
+( Show stack depth )
+.depth
+
+( Examine specific stack positions )
+.peek 0  ( Top element )
+.peek 1  ( Second element )
+.peek 2  ( Third element )
+
+( Reset REPL to initial state )
+.reset
+
+( ========================================= )
+( Word Definition and Inspection )
+( ========================================= )
+
+( Define a simple word )
+:: triple ( Nat -> Nat ) ;
+: triple 3 * ;
+
+( Show the definition of a word )
+.show triple
+
+( Define a more complex word )
+:: quadratic ( Nat Nat Nat Nat -> Nat ) ;
+: quadratic
+  ( a b c x -> ax² + bx + c )
+  dup dup * rot * rot rot * + + ;
+
+.show quadratic
+
+( List all user-defined words )
+.words
+
+( ========================================= )
+( Execution Tracing )
+( ========================================= )
+
+( Enable execution tracing )
+.trace on
+
+( Execute some operations with tracing )
+5 triple
+.s
+
+( Execute a more complex operation )
+2 3 1 10 quadratic
+.s
+
+( Show recent trace entries )
+.showtrace 5
+
+( Disable tracing )
+.trace off
+
+( ========================================= )
+( Performance Monitoring )
+( ========================================= )
+
+( Show current performance metrics )
+.metrics
+
+( Define a computationally intensive function )
+:: factorial ( Nat -> Nat ) ;
+: factorial dup 1 = [ ] [ dup 1 - factorial * ] if ;
+
+( Time a specific operation )
+.time 8 factorial
+
+( Show updated metrics )
+.metrics
+
+( Reset performance counters )
+.reset-metrics
+
+( ========================================= )
+( Session Management )
+( ========================================= )
+
+( Define some words to save )
+:: double ( Nat -> Nat ) ;
+: double 2 * ;
+
+:: square ( Nat -> Nat ) ;
+: square dup * ;
+
+:: distance ( Nat Nat Nat Nat -> Nat ) ;
+: distance
+  ( x1 y1 x2 y2 -> distance )
+  rot - dup * rot rot - dup * + ;
+
+( Add some data to the stack )
+100 200 300
+
+( Save current session )
+.save my_session.json
+
+( Show session information )
+.session-info
+
+( Load a session (conceptual - would load if file exists) )
+( .load my_session.json )
+
+( ========================================= )
+( Command History )
+( ========================================= )
+
+( Show command history )
+.history
+
+( Show last N commands )
+.history 5
+
+( Execute a command from history by number )
+( .exec 3 )
+
+( ========================================= )
+( Configuration Options )
+( ========================================= )
+
+( Show current configuration )
+.config
+
+( Enable stack display after each operation )
+.set show-stack true
+
+( Test the setting )
+10 double
+20 square
+
+( Enable timing display )
+.set show-timing true
+
+( Test timing display )
+6 factorial
+
+( Change the prompt )
+.set prompt "C∀O-DEMO> "
+
+( Disable colored output )
+.set use-colors false
+
+( Show updated configuration )
+.config
+
+( Reset to defaults )
+.config reset
+
+( ========================================= )
+( Debugging Features )
+( ========================================= )
+
+( Define a word with potential issues )
+:: problematic ( Nat -> Nat ) ;
+: problematic dup 0 = [ 1 0 / ] [ 1 + ] if ;
+
+( Enable debug mode )
+.debug on
+
+( Try to execute the problematic word )
+( 0 problematic )  ( This would cause division by zero )
+
+( Show error information )
+.last-error
+
+( Set breakpoints (conceptual feature) )
+.break-on problematic
+
+( Step through execution )
+.step-mode on
+
+( Execute step by step )
+( 5 problematic )
+
+.step-mode off
+.debug off
+
+( ========================================= )
+( Memory and Stack Analysis )
+( ========================================= )
+
+( Show memory usage )
+.memory
+
+( Show stack growth over time )
+1 2 3 4 5 6 7 8 9 10
+.stack-stats
+
+( Show maximum stack depth reached )
+.max-depth
+
+( Analyze stack usage pattern )
+.stack-analysis
+
+( ========================================= )
+( Profiling and Optimization )
+( ========================================= )
+
+( Start profiling )
+.profile start
+
+( Execute some operations )
+: test-ops
+  10 factorial
+  20 factorial
+  30 factorial ;
+
+test-ops
+
+( Stop profiling and show results )
+.profile stop
+.profile report
+
+( Show hotspots )
+.profile hotspots
+
+( ========================================= )
+( Type System Debugging )
+( ========================================= )
+
+( Enable type inference debugging )
+.type-debug
+
+( Define a word and watch type inference )
+: mystery-function dup + swap * ;
+
+( Show inferred type )
+.infer mystery-function
+
+( Disable type debugging )
+.type-debug
+
+( ========================================= )
+( Advanced REPL Features )
+( ========================================= )
+
+( Export definitions to file )
+.export-words my_words.cao
+
+( Import definitions from file )
+( .import my_words.cao )
+
+( Show compilation statistics )
+.compile-stats
+
+( Optimize current definitions )
+.optimize
+
+( Show optimization results )
+.optimization-report
+
+( ========================================= )
+( Interactive Testing )
+( ========================================= )
+
+( Define a test suite )
+.test-suite math-functions
+
+( Add test cases )
+.test "double function" 5 double 10 =
+.test "square function" 4 square 16 =
+.test "factorial" 5 factorial 120 =
+
+( Run all tests )
+.run-tests
+
+( Show test results )
+.test-report
+
+( ========================================= )
+( Auto-completion and Help )
+( ========================================= )
+
+( Show available completions for partial commands )
+.complete .st
+
+( Show help for specific command )
+.help .trace
+
+( Show all REPL commands )
+.commands
+
+( Show keyboard shortcuts )
+.shortcuts
+
+( ========================================= )
+( Workspace Management )
+( ========================================= )
+
+( Create a named workspace )
+.workspace create math-playground
+
+( Switch to workspace )
+.workspace switch math-playground
+
+( List all workspaces )
+.workspace list
+
+( Save workspace )
+.workspace save
+
+( Load workspace )
+.workspace load math-playground
+
+( ========================================= )
+( Summary and Best Practices )
+( ========================================= )
+
+.clear
+
+( Summary of REPL features: )
+( - Stack inspection: .s, .stack, .peek )
+( - Debugging: .trace, .debug, .step-mode )
+( - Performance: .metrics, .time, .profile )
+( - Sessions: .save, .load, .session-info )
+( - Configuration: .config, .set )
+( - Testing: .test-suite, .run-tests )
+( - History: .history, .exec )
+( - Help: .help, .commands, .shortcuts )
+
+( Best practices for REPL usage: )
+( 1. Use .trace to understand execution flow )
+( 2. Save sessions frequently with .save )
+( 3. Use .metrics to monitor performance )
+( 4. Test functions interactively before defining )
+( 5. Use .help when stuck )
+( 6. Profile complex algorithms with .profile )
+( 7. Use workspaces to organize projects )
+
+( Advanced REPL tips: )
+( - Combine .trace with .step-mode for detailed debugging )
+( - Use .time to benchmark individual operations )
+( - Set up test suites for regression testing )
+( - Use .export-words to share function libraries )
+( - Monitor .max-depth for recursive functions )
+
+( Interactive development workflow: )
+( 1. Start with simple stack operations )
+( 2. Build up complexity incrementally )
+( 3. Test each component interactively )
+( 4. Use tracing to debug issues )
+( 5. Profile for performance bottlenecks )
+( 6. Save working sessions )
+( 7. Document and share successful patterns )
+
+quit

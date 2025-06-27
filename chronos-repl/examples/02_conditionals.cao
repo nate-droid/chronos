@@ -1,0 +1,242 @@
+( ========================================= )
+( Conditionals and Control Flow )
+( ========================================= )
+( This example demonstrates conditional execution )
+( and control flow in C∀O using the 'if' word )
+( and boolean operations. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/02_conditionals.cao )
+
+( ========================================= )
+( Boolean Values and Operations )
+( ========================================= )
+
+( Push boolean values )
+true
+.s  ( Stack: [true] )
+
+false
+.s  ( Stack: [true, false] )
+
+( Clear for next examples )
+.clear
+
+( ========================================= )
+( Basic Conditional Execution )
+( ========================================= )
+
+( The 'if' word consumes: Bool Quote Quote -> result )
+( if condition [ true-branch ] [ false-branch ] if )
+
+( Simple true condition )
+true [ 42 ] [ 0 ] if
+.s  ( Should show [42] )
+
+.clear
+
+( Simple false condition )
+false [ 42 ] [ 0 ] if
+.s  ( Should show [0] )
+
+.clear
+
+( ========================================= )
+( Comparison Operations )
+( ========================================= )
+
+( Test equality )
+5 5 =
+.s  ( Should show [true] )
+
+( Test with different numbers )
+3 7 =
+.s  ( Should show [true, false] )
+
+.clear
+
+( Test less than )
+3 5 <
+.s  ( Should show [true] )
+
+5 3 <
+.s  ( Should show [true, false] )
+
+.clear
+
+( ========================================= )
+( Defining Conditional Words )
+( ========================================= )
+
+( Define absolute value function )
+:: abs ( Int -> Nat ) ;
+: abs dup 0 < [ 0 swap - ] [ ] if ;
+
+( Test absolute value - note: this is conceptual )
+( since we don't have negative numbers in this demo )
+5 abs
+.s
+
+.clear
+
+( Define maximum of two numbers )
+:: max ( Nat Nat -> Nat ) ;
+: max dup2 > [ drop ] [ swap drop ] if ;
+
+( Test maximum - note: dup2 might not exist, using alternative )
+:: max ( Nat Nat -> Nat ) ;
+: max over over > [ drop ] [ swap drop ] if ;
+
+10 5 max
+.s  ( Should show [10] )
+
+.clear
+
+( Define minimum of two numbers )
+:: min ( Nat Nat -> Nat ) ;
+: min over over < [ drop ] [ swap drop ] if ;
+
+3 8 min
+.s  ( Should show [3] )
+
+.clear
+
+( ========================================= )
+( Sign Function )
+( ========================================= )
+
+( Define a sign function that returns 0 for 0, 1 for positive )
+:: sign ( Nat -> Nat ) ;
+: sign dup 0 = [ drop 0 ] [ drop 1 ] if ;
+
+0 sign
+.s  ( Should show [0] )
+
+5 sign
+.s  ( Should show [0, 1] )
+
+.clear
+
+( ========================================= )
+( Even/Odd Testing )
+( ========================================= )
+
+( Define even test - returns true if number is even )
+:: is_even ( Nat -> Bool ) ;
+: is_even 2 % 0 = ;
+
+( Define odd test )
+:: is_odd ( Nat -> Bool ) ;
+: is_odd is_even not ;
+
+( Test even numbers )
+4 is_even
+.s  ( Should show [true] )
+
+3 is_even
+.s  ( Should show [true, false] )
+
+.clear
+
+( ========================================= )
+( Factorial with Conditional )
+( ========================================= )
+
+( Define factorial recursively )
+:: factorial ( Nat -> Nat ) ;
+: factorial dup 1 = [ ] [ dup 1 - factorial * ] if ;
+
+( Test factorial )
+5 factorial
+.s  ( Should show [120] )
+
+.clear
+
+( ========================================= )
+( Fibonacci with Conditional )
+( ========================================= )
+
+( Define fibonacci recursively )
+:: fibonacci ( Nat -> Nat ) ;
+: fibonacci dup 2 < [ ] [ dup 1 - fibonacci swap 2 - fibonacci + ] if ;
+
+( Test fibonacci )
+6 fibonacci
+.s  ( Should show [8] )
+
+.clear
+
+( ========================================= )
+( Conditional Stack Operations )
+( ========================================= )
+
+( Define a word that duplicates only if the number is small )
+:: dup_if_small ( Nat -> Nat | Nat Nat ) ;
+: dup_if_small dup 10 < [ dup ] [ ] if ;
+
+5 dup_if_small
+.s  ( Should show [5, 5] )
+
+15 dup_if_small
+.s  ( Should show [5, 5, 15] )
+
+.clear
+
+( Define a word that drops zero values )
+:: drop_if_zero ( Nat -> | Nat ) ;
+: drop_if_zero dup 0 = [ drop ] [ ] if ;
+
+0 drop_if_zero
+.s  ( Should show [] )
+
+7 drop_if_zero
+.s  ( Should show [7] )
+
+.clear
+
+( ========================================= )
+( Nested Conditionals )
+( ========================================= )
+
+( Define a word that categorizes numbers )
+:: categorize ( Nat -> Nat ) ;
+: categorize
+  dup 0 = [ drop 0 ] [    ( zero )
+    dup 10 < [ drop 1 ] [ ( small )
+      dup 100 < [ drop 2 ] [ drop 3 ] if  ( medium or large )
+    ] if
+  ] if ;
+
+0 categorize
+.s  ( Should show [0] )
+
+5 categorize
+.s  ( Should show [0, 1] )
+
+50 categorize
+.s  ( Should show [0, 1, 2] )
+
+500 categorize
+.s  ( Should show [0, 1, 2, 3] )
+
+.clear
+
+( ========================================= )
+( Summary and Cleanup )
+( ========================================= )
+
+.words  ( Show all defined words )
+
+( Summary of conditional features: )
+( - if word: Bool Quote Quote -> result )
+( - Comparison operators: =, <, > )
+( - Boolean values: true, false )
+( - Recursive definitions possible )
+( - Nested conditionals supported )
+
+( Try experimenting with: )
+( - More complex boolean expressions )
+( - Chained conditionals )
+( - Conditional recursive algorithms )
+
+quit

@@ -1,0 +1,294 @@
+( ========================================= )
+( Advanced Algorithms and Recursion )
+( ========================================= )
+( This example demonstrates more complex algorithms )
+( including recursive functions, mathematical )
+( computations, and algorithmic patterns in C∀O. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/03_algorithms.cao )
+
+( ========================================= )
+( Mathematical Sequences )
+( ========================================= )
+
+( Fibonacci sequence with memoization concept )
+:: fib ( Nat -> Nat ) ;
+: fib dup 2 < [ ] [ dup 1 - fib swap 2 - fib + ] if ;
+
+( Test fibonacci for first few numbers )
+0 fib
+.s  ( Should show [0] )
+
+1 fib
+.s  ( Should show [0, 1] )
+
+5 fib
+.s  ( Should show [0, 1, 5] )
+
+.clear
+
+( Factorial implementation )
+:: fact ( Nat -> Nat ) ;
+: fact dup 1 = [ ] [ dup 1 - fact * ] if ;
+
+( Test factorial )
+0 fact
+.s  ( Should show [1] - by convention 0! = 1 )
+
+5 fact
+.s  ( Should show [1, 120] )
+
+.clear
+
+( ========================================= )
+( Greatest Common Divisor (Euclidean Algorithm) )
+( ========================================= )
+
+:: gcd ( Nat Nat -> Nat ) ;
+: gcd dup 0 = [ drop ] [ swap over % gcd ] if ;
+
+( Test GCD )
+48 18 gcd
+.s  ( Should show [6] )
+
+.clear
+
+( Least Common Multiple using GCD )
+:: lcm ( Nat Nat -> Nat ) ;
+: lcm over over gcd rot rot * swap / ;
+
+15 10 lcm
+.s  ( Should show [30] )
+
+.clear
+
+( ========================================= )
+( Prime Number Testing )
+( ========================================= )
+
+( Helper function: check if n is divisible by d )
+:: divisible ( Nat Nat -> Bool ) ;
+: divisible % 0 = ;
+
+( Simple primality test (inefficient but clear) )
+:: is_prime_helper ( Nat Nat -> Bool ) ;
+: is_prime_helper
+  over over * over > [ drop drop true ] [
+    over over divisible [ drop drop false ] [
+      1 + is_prime_helper
+    ] if
+  ] if ;
+
+:: is_prime ( Nat -> Bool ) ;
+: is_prime dup 2 < [ drop false ] [ 2 is_prime_helper ] if ;
+
+( Test prime checking )
+7 is_prime
+.s  ( Should show [true] )
+
+9 is_prime
+.s  ( Should show [true, false] )
+
+.clear
+
+( ========================================= )
+( Power Function )
+( ========================================= )
+
+:: power ( Nat Nat -> Nat ) ;
+: power dup 0 = [ drop drop 1 ] [
+    1 - swap dup rot power *
+  ] if ;
+
+( Test power function )
+2 3 power
+.s  ( Should show [8] )
+
+5 2 power
+.s  ( Should show [8, 25] )
+
+.clear
+
+( ========================================= )
+( Sum of Natural Numbers )
+( ========================================= )
+
+( Sum from 1 to n )
+:: sum_to_n ( Nat -> Nat ) ;
+: sum_to_n dup 0 = [ ] [ dup 1 - sum_to_n + ] if ;
+
+5 sum_to_n
+.s  ( Should show [15] )
+
+.clear
+
+( Sum of squares from 1 to n )
+:: sum_squares_to_n ( Nat -> Nat ) ;
+: sum_squares_to_n dup 0 = [ ] [ dup dup * swap 1 - sum_squares_to_n + ] if ;
+
+3 sum_squares_to_n
+.s  ( Should show [14] - 1² + 2² + 3² = 1 + 4 + 9 = 14 )
+
+.clear
+
+( ========================================= )
+( Number Theory Functions )
+( ========================================= )
+
+( Count digits in a number )
+:: digit_count ( Nat -> Nat ) ;
+: digit_count dup 10 < [ drop 1 ] [ 10 / digit_count 1 + ] if ;
+
+12345 digit_count
+.s  ( Should show [5] )
+
+.clear
+
+( Reverse digits of a number )
+:: reverse_digits_helper ( Nat Nat -> Nat ) ;
+: reverse_digits_helper over 0 = [ swap drop ] [
+    swap dup 10 % rot 10 * + swap 10 / swap reverse_digits_helper
+  ] if ;
+
+:: reverse_digits ( Nat -> Nat ) ;
+: reverse_digits 0 reverse_digits_helper ;
+
+1234 reverse_digits
+.s  ( Should show [4321] )
+
+.clear
+
+( Check if a number is palindromic )
+:: is_palindrome ( Nat -> Bool ) ;
+: is_palindrome dup reverse_digits = ;
+
+121 is_palindrome
+.s  ( Should show [true] )
+
+123 is_palindrome
+.s  ( Should show [true, false] )
+
+.clear
+
+( ========================================= )
+( Collatz Conjecture )
+( ========================================= )
+
+( Count steps in Collatz sequence until reaching 1 )
+:: collatz_steps ( Nat -> Nat ) ;
+: collatz_steps dup 1 = [ drop 0 ] [
+    dup 2 % 0 = [ 2 / ] [ 3 * 1 + ] if
+    collatz_steps 1 +
+  ] if ;
+
+5 collatz_steps
+.s  ( Should show the number of steps for n=5 )
+
+.clear
+
+( ========================================= )
+( Binary Operations )
+( ========================================= )
+
+( Convert number to binary (conceptual - returns digit count in binary) )
+:: binary_length ( Nat -> Nat ) ;
+: binary_length dup 1 = [ drop 1 ] [ 2 / binary_length 1 + ] if ;
+
+8 binary_length
+.s  ( Should show [4] - 8 in binary is 1000, which has 4 digits )
+
+.clear
+
+( ========================================= )
+( Sorting Algorithm Helper )
+( ========================================= )
+
+( Bubble sort step for three numbers on stack )
+:: sort3 ( Nat Nat Nat -> Nat Nat Nat ) ;
+: sort3
+  rot dup rot dup rot  ( get all three numbers )
+  over > [ swap ] [ ] if  ( sort first two )
+  rot over > [ swap ] [ ] if  ( sort with third )
+  rot over > [ swap ] [ ] if  ( final comparison )
+;
+
+3 1 2 sort3
+.s  ( Should show [1, 2, 3] in sorted order )
+
+.clear
+
+( ========================================= )
+( Mathematical Constants Approximation )
+( ========================================= )
+
+( Approximate π using Leibniz formula (first few terms) )
+:: pi_approx_term ( Nat -> Nat ) ;  ( This is conceptual )
+: pi_approx_term
+  dup 2 * 1 + 1 swap /  ( 1/(2n+1) )
+  swap 2 % 0 = [ ] [ 0 swap - ] if  ( alternate signs )
+;
+
+( ========================================= )
+( Tree Traversal Concepts )
+( ========================================= )
+
+( Binary tree height calculation (conceptual) )
+:: tree_height ( Nat Nat -> Nat ) ;
+: tree_height over over > [ swap ] [ ] if 1 + ;
+
+( Calculate height of a conceptual binary tree )
+3 2 tree_height
+.s
+
+.clear
+
+( ========================================= )
+( Performance Testing )
+( ========================================= )
+
+( Define a computationally intensive function for testing )
+:: ackermann_mini ( Nat Nat -> Nat ) ;
+: ackermann_mini
+  over 0 = [ swap drop 1 + ] [
+    dup 0 = [ drop 1 - 1 ackermann_mini ] [
+      swap 1 - swap dup 1 - rot swap ackermann_mini ackermann_mini
+    ] if
+  ] if ;
+
+( Test with small values )
+2 1 ackermann_mini
+.s
+
+.clear
+
+( ========================================= )
+( Summary and Performance Notes )
+( ========================================= )
+
+.words  ( Show all defined algorithms )
+
+( Summary of algorithms demonstrated: )
+( - Fibonacci sequence )
+( - Factorial calculation )
+( - Greatest Common Divisor )
+( - Prime number testing )
+( - Power function )
+( - Sum operations )
+( - Digit manipulation )
+( - Collatz conjecture )
+( - Sorting helpers )
+( - Mathematical approximations )
+
+( Performance considerations: )
+( - Recursive functions can be stack-intensive )
+( - Tail recursion optimization may apply )
+( - Consider iterative alternatives for deep recursion )
+
+( Try implementing: )
+( - Sieve of Eratosthenes )
+( - Newton's method )
+( - Matrix operations )
+( - Graph algorithms )
+
+quit

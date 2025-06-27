@@ -1,0 +1,159 @@
+( ========================================= )
+( Simple Basic Arithmetic - Current Implementation )
+( ========================================= )
+( This example demonstrates fundamental C∀O operations )
+( that work with the current implementation without )
+( type signatures or advanced features. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/simple_01_basic_arithmetic.cao )
+
+( ========================================= )
+( Basic Arithmetic Operations )
+( ========================================= )
+
+( Let's start with simple arithmetic )
+( Push numbers and perform operations )
+2 3 +
+.s
+
+( Multiply the result )
+4 *
+.s
+
+( Subtract a number )
+5 -
+.s
+
+( ========================================= )
+( Stack Manipulation )
+( ========================================= )
+
+( Clear the stack first )
+drop
+
+( Push several numbers )
+1 2 3 4 5
+.s
+
+( Duplicate the top element )
+dup
+.s
+
+( Drop the top element )
+drop
+.s
+
+( Swap the top two elements )
+swap
+.s
+
+( Copy the second element to the top )
+over
+.s
+
+( ========================================= )
+( Simple Word Definitions )
+( ========================================= )
+
+( Define a word to double a number )
+( Note: no type signatures in current implementation )
+: double 2 * ;
+
+( Test the double function )
+7 double
+.s
+
+( Define a word to square a number )
+: square dup * ;
+
+( Test the square function )
+5 square
+.s
+
+( ========================================= )
+( Combining Operations )
+( ========================================= )
+
+( Clear the stack )
+drop drop drop drop drop drop
+
+( Calculate (3 + 4) * (5 - 2) )
+3 4 +
+5 2 -
+*
+.s
+
+( Define average function )
+: average + 2 / ;
+
+( Test averaging )
+drop
+10 20 average
+.s
+
+( ========================================= )
+( More Complex Expressions )
+( ========================================= )
+
+( Clear and try a complex expression )
+drop
+10 dup + 5 - 3 *
+.s
+
+( This calculates: 10 dup -> 10 10, + -> 20, 5 - -> 15, 3 * -> 45 )
+
+( ========================================= )
+( Working with the Stack )
+( ========================================= )
+
+( Build up a stack and manipulate it )
+drop
+1 2 3
+.s
+
+( Use rot to cycle elements )
+rot
+.s
+
+( ========================================= )
+( Testing Our Defined Words )
+( ========================================= )
+
+( Clear and test our functions )
+drop drop drop
+
+( Test double )
+6 double
+.s
+
+( Test square )
+drop
+4 square
+.s
+
+( Combine operations )
+drop
+3 double square
+.s
+
+( This should give us: 3 -> 6 -> 36 )
+
+( ========================================= )
+( Cleanup )
+( ========================================= )
+
+( Clear the stack )
+drop
+
+( Display help to show available operations )
+.
+
+( Summary: )
+( - Basic arithmetic: +, -, *, / )
+( - Stack operations: dup, drop, swap, over, rot )
+( - Simple word definition: : name body ; )
+( - Stack inspection: .s )
+( - Value display: . )
+
+quit

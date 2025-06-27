@@ -1,0 +1,330 @@
+( ========================================= )
+( Chronos (C∀O) Language Examples Overview )
+( ========================================= )
+( This file provides a comprehensive overview of the )
+( Chronos programming language examples and serves as )
+( an index to all available example files. )
+
+( Run this file with: )
+( cargo run --bin chronos-repl < examples/00_overview.cao )
+
+( ========================================= )
+( Welcome to Chronos! )
+( ========================================= )
+
+"Welcome to the Chronos (C∀O) Programming Language!" print
+"====================================================" print
+""
+"C∀O is a revolutionary concatenative programming language" print
+"that combines Category Theory, Ordinal Analysis, and" print
+"stack-based computing for provably correct software." print
+""
+
+( ========================================= )
+( Language Fundamentals )
+( ========================================= )
+
+"=== Language Fundamentals ===" print
+""
+"• Concatenative (postfix) syntax: operations follow operands" print
+"• Stack-based execution model" print
+"• Strong type system with inference" print
+"• Mathematical foundations in Category Theory" print
+"• Guaranteed termination through Ordinal Analysis" print
+""
+
+( Basic syntax demonstration )
+"Basic arithmetic example:" print
+"  2 3 +     (pushes 2, then 3, then adds: result is 5)" print
+2 3 +
+"Result:" print
+.s
+.clear
+
+"Stack manipulation example:" print
+"  1 2 3 dup swap     (duplicate top, then swap)" print
+1 2 3 dup swap
+"Result:" print
+.s
+.clear
+
+( ========================================= )
+( Core Language Elements )
+( ========================================= )
+
+"=== Core Language Elements ===" print
+""
+"Comments:" print
+"  ( This is a comment in parentheses )" print
+""
+"Word Definition:" print
+"  :: square ( Nat -> Nat ) ;    -- type signature" print
+"  : square dup * ;              -- implementation" print
+""
+"Core Types:" print
+"  • Unit     - terminal object ()" print
+"  • Bool     - true, false" print
+"  • Nat      - 0, 1, 2, 3, ..." print
+"  • Quote    - [ code blocks ]" print
+"  • Custom   - user-defined types" print
+""
+
+( Demonstrate word definition )
+:: demo_square ( Nat -> Nat ) ;
+: demo_square dup * ;
+
+"Defined 'demo_square' function. Testing with 7:" print
+7 demo_square
+.s
+.clear
+
+( ========================================= )
+( Example Files Index )
+( ========================================= )
+
+"=== Available Example Files ===" print
+""
+"01_basic_arithmetic.cao" print
+"  • Basic arithmetic operations (+, -, *)" print
+"  • Stack manipulation (dup, drop, swap, over, rot)" print
+"  • Simple word definitions" print
+"  • Stack inspection commands" print
+"  • Fundamental C∀O concepts" print
+""
+"02_conditionals.cao" print
+"  • Boolean values and operations" print
+"  • Conditional execution with 'if'" print
+"  • Comparison operators (=, <, >)" print
+"  • Recursive function definitions" print
+"  • Control flow patterns" print
+""
+"03_algorithms.cao" print
+"  • Mathematical sequences (Fibonacci, factorial)" print
+"  • Number theory algorithms (GCD, prime testing)" print
+"  • Recursive and iterative patterns" print
+"  • Performance considerations" print
+"  • Complex algorithmic examples" print
+""
+"04_data_types.cao" print
+"  • Custom type definitions" print
+"  • Algebraic data types" print
+"  • Option/Result patterns" print
+"  • Composite data structures" print
+"  • Type validation and checking" print
+""
+"05_repl_features.cao" print
+"  • Interactive REPL commands" print
+"  • Debugging and tracing" print
+"  • Session management" print
+"  • Performance monitoring" print
+"  • Configuration options" print
+""
+"06_real_world_app.cao" print
+"  • Complete scientific calculator" print
+"  • Unit conversion system" print
+"  • Financial calculations" print
+"  • Physics and engineering formulas" print
+"  • Practical application patterns" print
+""
+
+( ========================================= )
+( Quick Start Tutorial )
+( ========================================= )
+
+"=== Quick Start Tutorial ===" print
+""
+"1. Basic Stack Operations:" print
+"   Try: 1 2 3 .s" print
+1 2 3
+.s
+.clear
+
+"2. Simple Arithmetic:" print
+"   Try: 5 7 + 2 *" print
+5 7 + 2 *
+.s
+.clear
+
+"3. Word Definition:" print
+"   Try defining your own function:" print
+:: triple ( Nat -> Nat ) ;
+: triple 3 * ;
+"   Defined 'triple'. Testing: 4 triple" print
+4 triple
+.s
+.clear
+
+"4. Conditional Logic:" print
+"   Try: 5 3 > [ 'bigger' ] [ 'smaller' ] if" print
+( Note: string literals may not be available, using numbers )
+5 3 > [ 42 ] [ 0 ] if
+.s
+.clear
+
+( ========================================= )
+( Interactive Commands Reference )
+( ========================================= )
+
+"=== Essential REPL Commands ===" print
+""
+"Stack Operations:" print
+"  .s          - show stack contents" print
+"  .clear      - clear the stack" print
+"  .depth      - show stack depth" print
+""
+"Word Management:" print
+"  .words      - list all defined words" print
+"  .types      - list all defined types" print
+"  .show word  - show word definition" print
+""
+"Debugging:" print
+"  .trace on   - enable execution tracing" print
+"  .debug on   - enable debug mode" print
+"  .help       - show help information" print
+""
+"Session Management:" print
+"  .save file  - save current session" print
+"  .load file  - load saved session" print
+"  .reset      - reset to initial state" print
+""
+
+( ========================================= )
+( Learning Path Recommendations )
+( ========================================= )
+
+"=== Recommended Learning Path ===" print
+""
+"Beginner (Start Here):" print
+"  1. Run: 01_basic_arithmetic.cao" print
+"  2. Experiment with stack operations" print
+"  3. Define simple functions" print
+"  4. Practice with .s and .clear commands" print
+""
+"Intermediate:" print
+"  1. Run: 02_conditionals.cao" print
+"  2. Learn control flow patterns" print
+"  3. Run: 04_data_types.cao" print
+"  4. Understand type system" print
+""
+"Advanced:" print
+"  1. Run: 03_algorithms.cao" print
+"  2. Study recursive patterns" print
+"  3. Run: 05_repl_features.cao" print
+"  4. Master debugging tools" print
+""
+"Expert:" print
+"  1. Run: 06_real_world_app.cao" print
+"  2. Build your own applications" print
+"  3. Contribute to the language ecosystem" print
+"  4. Explore ordinal verification concepts" print
+""
+
+( ========================================= )
+( Language Philosophy and Goals )
+( ========================================= )
+
+"=== Language Philosophy ===" print
+""
+"Mathematical Foundations:" print
+"  • Every program has a mathematical proof of correctness" print
+"  • Type safety guaranteed by category theory" print
+"  • Termination ensured by ordinal analysis" print
+""
+"Evolutionary Design:" print
+"  • Language grows through community verification" print
+"  • New definitions must pass rigorous proof requirements" print
+"  • Collaborative development of the core library" print
+""
+"Interactive Development:" print
+"  • Immediate feedback on every operation" print
+"  • Bottom-up program construction" print
+"  • Compositional thinking encouraged" print
+""
+
+( ========================================= )
+( Common Patterns and Idioms )
+( ========================================= )
+
+"=== Common C∀O Patterns ===" print
+""
+"Stack Juggling:" print
+"  dup          - duplicate top element" print
+"  swap         - exchange top two elements" print
+"  rot          - rotate top three elements" print
+"  over         - copy second to top" print
+""
+"Conditional Patterns:" print
+"  condition [ true-branch ] [ false-branch ] if" print
+""
+"Recursive Patterns:" print
+"  : factorial dup 1 = [ ] [ dup 1 - factorial * ] if ;" print
+""
+"Type-Safe Patterns:" print
+"  :: function_name ( input_types -> output_types ) ;" print
+"  : function_name implementation ;" print
+""
+
+( ========================================= )
+( Tips for Success )
+( ========================================= )
+
+"=== Tips for Learning C∀O ===" print
+""
+"1. Think in terms of data flow on a stack" print
+"2. Start with simple operations and build complexity" print
+"3. Use .s frequently to visualize the stack" print
+"4. Practice stack manipulation until it becomes natural" print
+"5. Always provide type signatures for clarity" print
+"6. Test functions interactively before saving" print
+"7. Use tracing to understand execution flow" print
+"8. Save your work frequently with .save" print
+""
+
+( ========================================= )
+( Next Steps )
+( ========================================= )
+
+"=== Ready to Start! ===" print
+""
+"To begin learning C∀O:" print
+""
+"1. Start with: cargo run --bin chronos-repl < examples/01_basic_arithmetic.cao" print
+"2. Then explore the other example files in order" print
+"3. Experiment interactively in the REPL" print
+"4. Join the community and contribute!" print
+""
+"Happy coding in Chronos!" print
+""
+
+( ========================================= )
+( Interactive Demo )
+( ========================================= )
+
+"=== Quick Interactive Demo ===" print
+""
+
+( Define a few useful functions for immediate use )
+:: double ( Nat -> Nat ) ;
+: double 2 * ;
+
+:: square ( Nat -> Nat ) ;
+: square dup * ;
+
+:: average ( Nat Nat -> Nat ) ;
+: average + 2 / ;
+
+"Defined helper functions: double, square, average" print
+"Try them out:" print
+"  • 5 double" print
+"  • 6 square" print
+"  • 10 20 average" print
+""
+
+"Current stack is ready for experimentation!" print
+"Use .help for more commands" print
+"Use .words to see all available functions" print
+""
+
+"Welcome to the world of Chronos programming!" print
+
+quit
