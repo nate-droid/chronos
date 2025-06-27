@@ -39,6 +39,10 @@ path = "src/bin/test_all.rs"
 name = "simple_test"
 path = "src/bin/simple_test.rs"
 
+[[bin]]
+name = "cellular_automata"
+path = "src/bin/cellular_automata.rs"
+
 [dev-dependencies]
 tempfile = "3.0"
 

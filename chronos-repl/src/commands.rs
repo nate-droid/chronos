@@ -69,6 +69,19 @@ pub enum ReplCommand {
     /// Toggle Unicode symbols
     Unicode(Option<bool>),
 
+    /// Cellular Automata Commands
+    /// Show CA rule
+    CARule(u8),
+
+    /// Run CA with simple output
+    CASimple(u8, usize, Option<String>),
+
+    /// Launch interactive CA environment
+    CAInteractive(u8, Option<String>),
+
+    /// List famous CA rules
+    CARules,
+
     /// Exit the REPL
     Quit,
 
@@ -215,6 +228,54 @@ pub fn parse_command(input: &str) -> ReplCommand {
                 ReplCommand::Unicode(None)
             }
         }
+
+        "ca-rule" | "carule" => {
+            if parts.len() > 1 {
+                if let Ok(rule) = parts[1].parse::<u8>() {
+                    ReplCommand::CARule(rule)
+                } else {
+                    ReplCommand::Unknown(input.to_string())
+                }
+            } else {
+                ReplCommand::Unknown(input.to_string())
+            }
+        }
+
+        "ca-simple" | "casimple" => {
+            if parts.len() >= 3 {
+                if let (Ok(rule), Ok(gens)) = (parts[1].parse::<u8>(), parts[2].parse::<usize>()) {
+                    let pattern = if parts.len() > 3 {
+                        Some(parts[3..].join(" "))
+                    } else {
+                        None
+                    };
+                    ReplCommand::CASimple(rule, gens, pattern)
+                } else {
+                    ReplCommand::Unknown(input.to_string())
+                }
+            } else {
+                ReplCommand::Unknown(input.to_string())
+            }
+        }
+
+        "ca" | "cellular" => {
+            if parts.len() > 1 {
+                if let Ok(rule) = parts[1].parse::<u8>() {
+                    let pattern = if parts.len() > 2 {
+                        Some(parts[2..].join(" "))
+                    } else {
+                        None
+                    };
+                    ReplCommand::CAInteractive(rule, pattern)
+                } else {
+                    ReplCommand::Unknown(input.to_string())
+                }
+            } else {
+                ReplCommand::Unknown(input.to_string())
+            }
+        }
+
+        "ca-rules" | "carules" => ReplCommand::CARules,
 
         _ => ReplCommand::Unknown(input.to_string()),
     }
@@ -397,6 +458,50 @@ pub fn execute_command(
             Ok("Unicode symbols toggle command received".to_string())
         }
 
+        ReplCommand::CARule(rule) => {
+            use crate::cellular_automata::ElementaryRule;
+            let ca_rule = ElementaryRule::new(rule);
+            let mut result = format!("Elementary Cellular Automaton Rule {}\n", rule);
+            if let Some(name) = ca_rule.name() {
+                result.push_str(&format!("{}\n\n", name));
+            }
+            result.push_str(&ca_rule.rule_table());
+            Ok(result)
+        }
+
+        ReplCommand::CASimple(rule, generations, pattern) => {
+            use crate::cellular_automata::{run_simple_ca, ElementaryRule};
+            let ca_rule = ElementaryRule::new(rule);
+            let result = run_simple_ca(ca_rule, generations, 79, pattern.as_deref())?;
+            Ok(result)
+        }
+
+        ReplCommand::CAInteractive(rule, pattern) => {
+            use crate::cellular_automata::{CAConfig, CAEnvironment, ElementaryRule};
+            let ca_rule = ElementaryRule::new(rule);
+            let config = CAConfig::default();
+
+            let mut env = if let Some(p) = pattern {
+                CAEnvironment::new_with_pattern(ca_rule, config, &p)?
+            } else {
+                CAEnvironment::new(ca_rule, config)
+            };
+
+            env.run()?;
+            Ok("Cellular automaton session ended".to_string())
+        }
+
+        ReplCommand::CARules => {
+            use crate::cellular_automata::famous_rules;
+            let rules = famous_rules();
+            let mut result = String::from("Famous Cellular Automaton Rules:\n\n");
+            for (rule_num, description) in rules {
+                result.push_str(&format!("Rule {}: {}\n", rule_num, description));
+            }
+            result.push_str("\nUse '.ca <rule>' to run interactively or '.ca-simple <rule> <generations>' for text output");
+            Ok(result)
+        }
+
         ReplCommand::Quit => Ok("Goodbye!".to_string()),
 
         ReplCommand::Unknown(cmd) => Err(ReplError::command(format!("Unknown command: {}", cmd))),
@@ -433,6 +538,12 @@ Display Options:
   .syntax [on/off]   - Toggle syntax highlighting
   .unicode [on/off]  - Toggle Unicode symbols
 
+Cellular Automata:
+  .ca <rule> [pattern]      - Interactive CA with rule (0-255)
+  .ca-simple <rule> <gens>  - Text output CA evolution
+  .ca-rule <rule>           - Show rule table for rule number
+  .ca-rules                 - List famous CA rules
+
 Configuration:
   .set <key> <value> - Set configuration option
   .about             - Show about information
@@ -441,6 +552,8 @@ Examples:
   .save my_session.json
   .load examples/demo.json
   .trace on
+  .ca 30
+  .ca-simple 90 20 111
   .set trace true"#
         .to_string()
 }

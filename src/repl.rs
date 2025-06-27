@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use std::fs;
-
 use std::path::Path;
+use std::process::Command;
 use std::time::{Duration, Instant};
 
 /// Errors that can occur in the REPL
@@ -536,6 +536,55 @@ impl Repl {
             Some(&"qed") => {
                 self.complete_proof()?;
             }
+            // Cellular Automata commands
+            Some(&"ca-rules") => {
+                self.show_ca_rules();
+            }
+            Some(&"ca-rule") => {
+                if let Some(rule_str) = parts.get(1) {
+                    if let Ok(rule) = rule_str.parse::<u8>() {
+                        self.show_ca_rule(rule);
+                    } else {
+                        println!("Usage: .ca-rule <number> (0-255)");
+                    }
+                } else {
+                    println!("Usage: .ca-rule <number> (0-255)");
+                }
+            }
+            Some(&"ca-simple") => {
+                if parts.len() >= 3 {
+                    if let (Ok(rule), Ok(gens)) =
+                        (parts[1].parse::<u8>(), parts[2].parse::<usize>())
+                    {
+                        let pattern = if parts.len() > 3 {
+                            Some(parts[3..].join(" "))
+                        } else {
+                            None
+                        };
+                        self.run_simple_ca(rule, gens, pattern.as_deref());
+                    } else {
+                        println!("Usage: .ca-simple <rule> <generations> [pattern]");
+                    }
+                } else {
+                    println!("Usage: .ca-simple <rule> <generations> [pattern]");
+                }
+            }
+            Some(&"ca") => {
+                if parts.len() >= 2 {
+                    if let Ok(rule) = parts[1].parse::<u8>() {
+                        let pattern = if parts.len() > 2 {
+                            Some(parts[2..].join(" "))
+                        } else {
+                            None
+                        };
+                        self.launch_interactive_ca(rule, pattern.as_deref());
+                    } else {
+                        println!("Usage: .ca <rule> [pattern]");
+                    }
+                } else {
+                    println!("Usage: .ca <rule> [pattern]");
+                }
+            }
             Some(cmd) => {
                 println!("Unknown command: .{}", cmd);
                 println!("Type '.help' for available commands");
@@ -692,6 +741,12 @@ impl Repl {
         println!("  .goal <prop>     Set proof goal");
         println!("  .prove           Show current proof state");
         println!("  .qed             Complete current proof");
+        println!();
+        println!("Cellular Automata:");
+        println!("  .ca <rule> [pattern]      Interactive CA with rule (0-255)");
+        println!("  .ca-simple <rule> <gens>  Text output CA evolution");
+        println!("  .ca-rule <rule>           Show rule table for rule number");
+        println!("  .ca-rules                 List famous CA rules");
     }
 
     /// Show about information
@@ -989,6 +1044,303 @@ impl Repl {
         }
 
         Ok(())
+    }
+
+    /// Show famous cellular automaton rules
+    fn show_ca_rules(&self) {
+        println!("Famous Cellular Automaton Rules:");
+        println!();
+        println!("Rule 30: Rule 30 (Chaotic)");
+        println!("Rule 90: Rule 90 (Sierpinski Triangle)");
+        println!("Rule 110: Rule 110 (Turing Complete)");
+        println!("Rule 150: Rule 150 (XOR)");
+        println!("Rule 184: Rule 184 (Traffic)");
+        println!();
+        println!("Use '.ca <rule>' to run interactively or '.ca-simple <rule> <generations>' for text output");
+    }
+
+    /// Show rule table for a specific CA rule
+    fn show_ca_rule(&self, rule: u8) {
+        println!("Elementary Cellular Automaton Rule {}", rule);
+
+        let rule_name = match rule {
+            30 => Some("Rule 30 (Chaotic)"),
+            90 => Some("Rule 90 (Sierpinski Triangle)"),
+            110 => Some("Rule 110 (Turing Complete)"),
+            150 => Some("Rule 150 (XOR)"),
+            184 => Some("Rule 184 (Traffic)"),
+            _ => None,
+        };
+
+        if let Some(name) = rule_name {
+            println!("{}", name);
+        }
+        println!();
+
+        println!("Pattern -> Output");
+        for i in (0..8).rev() {
+            let left = (i & 4) != 0;
+            let center = (i & 2) != 0;
+            let right = (i & 1) != 0;
+            let output = (rule >> i) & 1 == 1;
+            println!(
+                "{}{}{} -> {}",
+                if left { "1" } else { "0" },
+                if center { "1" } else { "0" },
+                if right { "1" } else { "0" },
+                if output { "1" } else { "0" }
+            );
+        }
+    }
+
+    /// Run simple cellular automaton and display results
+    fn run_simple_ca(&self, rule: u8, generations: usize, pattern: Option<&str>) {
+        println!(
+            "Running Elementary CA Rule {} for {} generations",
+            rule, generations
+        );
+
+        // Create CA directly
+        let width = 79;
+        let mut ca = if let Some(p) = pattern {
+            self.create_ca_with_pattern(width, rule, p)
+        } else {
+            self.create_ca_single_seed(width, rule)
+        };
+
+        if let Some(mut ca) = ca {
+            // Evolve the CA
+            for _ in 0..generations {
+                ca.step();
+            }
+
+            // Display the history
+            println!("{}", ca.history_string());
+        }
+    }
+
+    /// Launch interactive cellular automaton environment
+    fn launch_interactive_ca(&self, rule: u8, pattern: Option<&str>) {
+        println!("Interactive Cellular Automaton (Rule {})", rule);
+        if let Some(name) = self.get_rule_name(rule) {
+            println!("{}", name);
+        }
+        println!();
+        println!("Controls:");
+        println!("  Press Enter to evolve one generation");
+        println!("  Type 'n <number>' to evolve multiple generations");
+        println!("  Type 'r' to reset");
+        println!("  Type 'q' to quit");
+        println!();
+
+        let width = 79;
+        let initial_ca = if let Some(p) = pattern {
+            self.create_ca_with_pattern(width, rule, p)
+        } else {
+            self.create_ca_single_seed(width, rule)
+        };
+
+        if let Some(mut ca) = initial_ca {
+            println!("Initial state:");
+            println!("{}", ca.current_generation_string());
+            println!();
+
+            self.run_interactive_ca_loop(&mut ca, rule, pattern);
+        }
+    }
+
+    /// Create CA with single seed in center
+    fn create_ca_single_seed(&self, width: usize, rule: u8) -> Option<SimpleCA> {
+        let mut cells = vec![false; width];
+        cells[width / 2] = true;
+        Some(SimpleCA::new(cells, rule))
+    }
+
+    /// Create CA with custom pattern
+    fn create_ca_with_pattern(&self, width: usize, rule: u8, pattern: &str) -> Option<SimpleCA> {
+        if pattern.len() > width {
+            eprintln!("Pattern too long for automaton width");
+            return None;
+        }
+
+        let mut cells = vec![false; width];
+        let start_pos = (width - pattern.len()) / 2;
+
+        for (i, ch) in pattern.chars().enumerate() {
+            match ch {
+                '1' | '█' | '#' | '*' => cells[start_pos + i] = true,
+                '0' | ' ' | '.' | '-' => cells[start_pos + i] = false,
+                _ => {
+                    eprintln!("Invalid pattern character: {}", ch);
+                    return None;
+                }
+            }
+        }
+
+        Some(SimpleCA::new(cells, rule))
+    }
+
+    /// Get rule name
+    fn get_rule_name(&self, rule: u8) -> Option<&'static str> {
+        match rule {
+            30 => Some("Rule 30 (Chaotic)"),
+            90 => Some("Rule 90 (Sierpinski Triangle)"),
+            110 => Some("Rule 110 (Turing Complete)"),
+            150 => Some("Rule 150 (XOR)"),
+            184 => Some("Rule 184 (Traffic)"),
+            _ => None,
+        }
+    }
+
+    /// Run interactive CA loop
+    fn run_interactive_ca_loop(&self, ca: &mut SimpleCA, rule: u8, pattern: Option<&str>) {
+        use std::io::{self, Write};
+
+        loop {
+            print!("CA> ");
+            io::stdout().flush().unwrap();
+
+            let mut input = String::new();
+            if io::stdin().read_line(&mut input).is_err() {
+                break;
+            }
+
+            let input = input.trim();
+            if input.is_empty() {
+                ca.step();
+                println!("Generation {}:", ca.generation);
+                println!("{}", ca.current_generation_string());
+            } else if input == "q" || input == "quit" {
+                break;
+            } else if input == "r" || input == "reset" {
+                *ca = if let Some(p) = pattern {
+                    if let Some(new_ca) = self.create_ca_with_pattern(ca.width(), rule, p) {
+                        new_ca
+                    } else {
+                        continue;
+                    }
+                } else {
+                    if let Some(new_ca) = self.create_ca_single_seed(ca.width(), rule) {
+                        new_ca
+                    } else {
+                        continue;
+                    }
+                };
+                println!("Reset to initial state");
+                println!("{}", ca.current_generation_string());
+            } else if let Some(n_str) = input.strip_prefix("n ") {
+                if let Ok(n) = n_str.parse::<usize>() {
+                    for _ in 0..n {
+                        ca.step();
+                    }
+                    println!(
+                        "Evolved {} generations. Now at generation {}:",
+                        n, ca.generation
+                    );
+                    println!("{}", ca.history_string_last(20));
+                } else {
+                    println!("Invalid number: {}", n_str);
+                }
+            } else if input == "h" || input == "help" {
+                println!("Controls:");
+                println!("  Enter     - Evolve one generation");
+                println!("  n <num>   - Evolve multiple generations");
+                println!("  r         - Reset to initial state");
+                println!("  h         - Show this help");
+                println!("  q         - Quit");
+            } else {
+                println!("Unknown command: {}. Type 'h' for help.", input);
+            }
+        }
+    }
+}
+
+/// Simple cellular automaton implementation
+struct SimpleCA {
+    cells: Vec<bool>,
+    rule: u8,
+    generation: usize,
+    history: Vec<Vec<bool>>,
+}
+
+impl SimpleCA {
+    fn new(cells: Vec<bool>, rule: u8) -> Self {
+        Self {
+            cells: cells.clone(),
+            rule,
+            generation: 0,
+            history: vec![cells],
+        }
+    }
+
+    fn width(&self) -> usize {
+        self.cells.len()
+    }
+
+    fn step(&mut self) {
+        let mut next_cells = vec![false; self.cells.len()];
+
+        for i in 0..self.cells.len() {
+            let left = if i == 0 { false } else { self.cells[i - 1] };
+            let center = self.cells[i];
+            let right = if i == self.cells.len() - 1 {
+                false
+            } else {
+                self.cells[i + 1]
+            };
+
+            next_cells[i] = self.apply_rule(left, center, right);
+        }
+
+        self.cells = next_cells.clone();
+        self.history.push(next_cells);
+        self.generation += 1;
+    }
+
+    fn apply_rule(&self, left: bool, center: bool, right: bool) -> bool {
+        let pattern = (left as u8) << 2 | (center as u8) << 1 | (right as u8);
+        (self.rule >> pattern) & 1 == 1
+    }
+
+    fn current_generation_string(&self) -> String {
+        let cells_str: String = self
+            .cells
+            .iter()
+            .map(|&cell| if cell { '█' } else { '·' })
+            .collect();
+        format!("{:3}: {}", self.generation, cells_str)
+    }
+
+    fn history_string(&self) -> String {
+        self.history
+            .iter()
+            .enumerate()
+            .map(|(i, generation)| {
+                let cells_str: String = generation
+                    .iter()
+                    .map(|&cell| if cell { '█' } else { '·' })
+                    .collect();
+                format!("{:3}: {}", i, cells_str)
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn history_string_last(&self, count: usize) -> String {
+        let start_idx = self.history.len().saturating_sub(count);
+        self.history[start_idx..]
+            .iter()
+            .enumerate()
+            .map(|(i, generation)| {
+                let gen_num = start_idx + i;
+                let cells_str: String = generation
+                    .iter()
+                    .map(|&cell| if cell { '█' } else { '·' })
+                    .collect();
+                format!("{:3}: {}", gen_num, cells_str)
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }
 

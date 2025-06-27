@@ -59,6 +59,7 @@
 //! }
 //! ```
 
+pub mod cellular_automata;
 pub mod commands;
 pub mod display;
 pub mod error;
@@ -70,6 +71,7 @@ pub mod tracing;
 pub use chronos_core::{ChronosCore, ChronosError, Token, Value};
 
 // Main exports
+pub use cellular_automata::{CAEnvironment, ElementaryCA, ElementaryRule};
 pub use error::{ReplError, Result};
 pub use repl::EnhancedRepl;
 pub use session::{Session, SessionData};
