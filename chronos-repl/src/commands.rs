@@ -92,6 +92,22 @@ pub enum ReplCommand {
     /// List Codd CA patterns
     CoddPatterns,
 
+    /// Enhanced Codd CA Commands
+    /// Run enhanced Codd CA demo
+    CoddEnhanced(String, usize, usize, usize),
+
+    /// Show enhanced pattern library
+    CoddEnhancedPatterns,
+
+    /// Show enhanced challenges
+    CoddEnhancedChallenges,
+
+    /// Start enhanced Codd CA challenge
+    CoddEnhancedChallenge(usize),
+
+    /// Launch enhanced interactive Codd CA environment
+    CoddEnhancedInteractive(String, usize, usize),
+
     /// Exit the REPL
     Quit,
 
@@ -318,6 +334,54 @@ pub fn parse_command(input: &str) -> ReplCommand {
         }
 
         "codd-patterns" | "coddpatterns" => ReplCommand::CoddPatterns,
+
+        "codd-enhanced" | "coddenhanced" => {
+            if parts.len() >= 5 {
+                if let (Ok(width), Ok(height), Ok(gens)) = (
+                    parts[2].parse::<usize>(),
+                    parts[3].parse::<usize>(),
+                    parts[4].parse::<usize>(),
+                ) {
+                    ReplCommand::CoddEnhanced(parts[1].to_string(), width, height, gens)
+                } else {
+                    ReplCommand::Unknown(input.to_string())
+                }
+            } else {
+                ReplCommand::Unknown(input.to_string())
+            }
+        }
+
+        "codd-enhanced-patterns" | "coddenhancedpatterns" => ReplCommand::CoddEnhancedPatterns,
+
+        "codd-enhanced-challenges" | "coddenhancedchallenges" => {
+            ReplCommand::CoddEnhancedChallenges
+        }
+
+        "codd-enhanced-challenge" | "coddenhancedchallenge" => {
+            if parts.len() >= 2 {
+                if let Ok(challenge_id) = parts[1].parse::<usize>() {
+                    ReplCommand::CoddEnhancedChallenge(challenge_id)
+                } else {
+                    ReplCommand::Unknown(input.to_string())
+                }
+            } else {
+                ReplCommand::Unknown(input.to_string())
+            }
+        }
+
+        "codd-enhanced-interactive" | "coddenhancedinteractive" => {
+            if parts.len() >= 4 {
+                if let (Ok(width), Ok(height)) =
+                    (parts[2].parse::<usize>(), parts[3].parse::<usize>())
+                {
+                    ReplCommand::CoddEnhancedInteractive(parts[1].to_string(), width, height)
+                } else {
+                    ReplCommand::Unknown(input.to_string())
+                }
+            } else {
+                ReplCommand::Unknown(input.to_string())
+            }
+        }
 
         _ => ReplCommand::Unknown(input.to_string()),
     }
@@ -595,6 +659,40 @@ pub fn execute_command(
             Ok(result)
         }
 
+        ReplCommand::CoddEnhanced(pattern, width, height, generations) => {
+            use crate::codd_game::run_enhanced_codd_demo;
+            let _result = run_enhanced_codd_demo(&pattern, width, height, generations as u32)?;
+            Ok("Enhanced Codd's CA demo completed".to_string())
+        }
+
+        ReplCommand::CoddEnhancedPatterns => {
+            use crate::codd_game::show_enhanced_patterns;
+            show_enhanced_patterns()?;
+            Ok("Enhanced patterns displayed".to_string())
+        }
+
+        ReplCommand::CoddEnhancedChallenges => {
+            use crate::codd_game::show_enhanced_challenges;
+            show_enhanced_challenges()?;
+            Ok("Enhanced challenges displayed".to_string())
+        }
+
+        ReplCommand::CoddEnhancedChallenge(challenge_id) => {
+            // This would need a more complex implementation
+            Ok(format!(
+                "Challenge {} not yet fully implemented",
+                challenge_id
+            ))
+        }
+
+        ReplCommand::CoddEnhancedInteractive(pattern, width, height) => {
+            // This would launch the full interactive environment
+            Ok(format!(
+                "Enhanced interactive mode for {} ({}x{}) not yet fully implemented",
+                pattern, width, height
+            ))
+        }
+
         ReplCommand::Quit => Ok("Goodbye!".to_string()),
 
         ReplCommand::Unknown(cmd) => Err(ReplError::command(format!("Unknown command: {}", cmd))),
@@ -641,6 +739,13 @@ Codd's Cellular Automata:
   .codd <pattern> <width> <height>           - Interactive Codd CA
   .codd-simple <pattern> <w> <h> <gens>      - Text output Codd CA
   .codd-patterns                             - List Codd CA patterns
+
+Enhanced Codd's Cellular Automata (Game Mode):
+  .codd-enhanced <pattern> <w> <h> <gens>    - Enhanced demo with better graphics
+  .codd-enhanced-patterns                    - Show enhanced pattern library
+  .codd-enhanced-challenges                  - Show available challenges
+  .codd-enhanced-challenge <id>              - Start a specific challenge
+  .codd-enhanced-interactive <p> <w> <h>     - Full interactive game mode
 
 Configuration:
   .set <key> <value> - Set configuration option
