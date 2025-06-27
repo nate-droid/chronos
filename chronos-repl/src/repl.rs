@@ -343,8 +343,19 @@ impl EnhancedRepl {
         if self.tracing_enabled {
             self.eval_with_tracing(input)?;
         } else {
-            let tokens = self.core.tokenize(input).map_err(ReplError::from)?;
-            self.core.execute_tokens(&tokens).map_err(ReplError::from)?;
+            match self.core.eval_source(input) {
+                Ok(()) => {}
+                Err(e) => {
+                    let error_msg = e.to_string();
+                    if error_msg.contains("QUIT_REQUESTED") {
+                        self.should_exit = true;
+                        println!("Farewell! May your axioms remain consistent.");
+                        return Ok(());
+                    } else {
+                        return Err(ReplError::from(e));
+                    }
+                }
+            }
         }
 
         let duration = start_time.elapsed();
@@ -414,8 +425,8 @@ impl EnhancedRepl {
 
     /// Evaluate with detailed tracing enabled
     fn eval_with_tracing(&mut self, input: &str) -> Result<()> {
-        // Tokenize the input
-        let tokens = self.core.tokenize(input).map_err(ReplError::from)?;
+        // Parse the input with quote processing
+        let tokens = self.core.parse(input).map_err(ReplError::from)?;
 
         // Execute each token with tracing
         for token in tokens {

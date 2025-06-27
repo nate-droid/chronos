@@ -22,6 +22,8 @@ pub enum VmError {
     DivisionByZero,
     /// Invalid operation
     InvalidOperation(String),
+    /// Runtime error
+    RuntimeError(String),
     /// Ordinal verification failed
     OrdinalVerificationFailed(String),
 }
@@ -36,6 +38,7 @@ impl fmt::Display for VmError {
             VmError::UnknownWord(word) => write!(f, "Unknown word: {}", word),
             VmError::DivisionByZero => write!(f, "Division by zero"),
             VmError::InvalidOperation(msg) => write!(f, "Invalid operation: {}", msg),
+            VmError::RuntimeError(msg) => write!(f, "Runtime error: {}", msg),
             VmError::OrdinalVerificationFailed(msg) => {
                 write!(f, "Ordinal verification failed: {}", msg)
             }
@@ -285,6 +288,7 @@ impl VirtualMachine {
 
             // Stack manipulation
             "dup" => self.builtin_dup(),
+            "dup2" => self.builtin_dup2(),
             "drop" => self.builtin_drop(),
             "swap" => self.builtin_swap(),
             "over" => self.builtin_over(),
@@ -295,11 +299,18 @@ impl VirtualMachine {
             "-" => self.builtin_sub(),
             "*" => self.builtin_mul(),
             "/" => self.builtin_div(),
+            "mod" => self.builtin_mod(),
+            "%" => self.builtin_mod(),
 
             // Comparison
             "=" => self.builtin_eq(),
             "<" => self.builtin_lt(),
             ">" => self.builtin_gt(),
+
+            // Boolean operations
+            "not" => self.builtin_not(),
+            "and" => self.builtin_and(),
+            "or" => self.builtin_or(),
 
             // Control flow
             "if" => self.builtin_if(),
@@ -308,6 +319,7 @@ impl VirtualMachine {
             "." => self.builtin_dot(),
             ".s" => self.builtin_dot_s(),
             "print" => self.builtin_print(),
+            "quit" => self.builtin_quit(),
             "--ordinal" => self.builtin_ordinal(),
 
             // Polymorphic type constructors
@@ -415,6 +427,19 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn builtin_dup2(&mut self) -> Result<(), VmError> {
+        if self.stack.len() < 2 {
+            return Err(VmError::StackUnderflow("dup2".to_string()));
+        }
+        let b = self.pop()?;
+        let a = self.pop()?;
+        self.push(a.clone());
+        self.push(b.clone());
+        self.push(a);
+        self.push(b);
+        Ok(())
+    }
+
     fn builtin_drop(&mut self) -> Result<(), VmError> {
         self.pop()?;
         Ok(())
@@ -504,12 +529,33 @@ impl VirtualMachine {
     fn builtin_div(&mut self) -> Result<(), VmError> {
         let b = self.pop()?;
         let a = self.pop()?;
+
         match (a, b) {
             (Value::Nat(x), Value::Nat(y)) => {
                 if y == 0 {
-                    Err(VmError::DivisionByZero)
+                    Err(VmError::RuntimeError("Division by zero".to_string()))
                 } else {
                     self.push(Value::Nat(x / y));
+                    Ok(())
+                }
+            }
+            _ => Err(VmError::TypeMismatch {
+                expected: "Nat Nat".to_string(),
+                found: "other types".to_string(),
+            }),
+        }
+    }
+
+    fn builtin_mod(&mut self) -> Result<(), VmError> {
+        let b = self.pop()?;
+        let a = self.pop()?;
+
+        match (a, b) {
+            (Value::Nat(x), Value::Nat(y)) => {
+                if y == 0 {
+                    Err(VmError::RuntimeError("Modulo by zero".to_string()))
+                } else {
+                    self.push(Value::Nat(x % y));
                     Ok(())
                 }
             }
@@ -650,6 +696,55 @@ impl VirtualMachine {
         let value = self.pop()?;
         self.push(Value::Option(Some(Box::new(value))));
         Ok(())
+    }
+
+    fn builtin_quit(&mut self) -> Result<(), VmError> {
+        // For now, just return a special error that can be caught by the REPL
+        Err(VmError::RuntimeError("QUIT_REQUESTED".to_string()))
+    }
+
+    fn builtin_not(&mut self) -> Result<(), VmError> {
+        let a = self.pop()?;
+        match a {
+            Value::Bool(b) => {
+                self.push(Value::Bool(!b));
+                Ok(())
+            }
+            _ => Err(VmError::TypeMismatch {
+                expected: "Bool".to_string(),
+                found: "other type".to_string(),
+            }),
+        }
+    }
+
+    fn builtin_and(&mut self) -> Result<(), VmError> {
+        let b = self.pop()?;
+        let a = self.pop()?;
+        match (a, b) {
+            (Value::Bool(x), Value::Bool(y)) => {
+                self.push(Value::Bool(x && y));
+                Ok(())
+            }
+            _ => Err(VmError::TypeMismatch {
+                expected: "Bool Bool".to_string(),
+                found: "other types".to_string(),
+            }),
+        }
+    }
+
+    fn builtin_or(&mut self) -> Result<(), VmError> {
+        let b = self.pop()?;
+        let a = self.pop()?;
+        match (a, b) {
+            (Value::Bool(x), Value::Bool(y)) => {
+                self.push(Value::Bool(x || y));
+                Ok(())
+            }
+            _ => Err(VmError::TypeMismatch {
+                expected: "Bool Bool".to_string(),
+                found: "other types".to_string(),
+            }),
+        }
     }
 
     /// Create None value

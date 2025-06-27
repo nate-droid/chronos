@@ -111,11 +111,115 @@ impl ChronosCore {
             .map_err(|e| ChronosError::lex_error(e.to_string(), None))
     }
 
+    /// Parse source code into tokens with quote processing
+    pub fn parse(&self, source: &str) -> Result<Vec<Token>> {
+        let tokens = self.tokenize(source)?;
+        self.process_quotes(tokens)
+    }
+
+    /// Process quote tokens and convert them to Quote values
+    fn process_quotes(&self, tokens: Vec<Token>) -> Result<Vec<Token>> {
+        let mut result = Vec::new();
+        let mut i = 0;
+
+        while i < tokens.len() {
+            match &tokens[i] {
+                Token::QuoteStart => {
+                    // Find matching QuoteEnd
+                    let quote_tokens = self.extract_quote(&tokens, i)?;
+                    let quote_end_index = self.find_quote_end(&tokens, i)?;
+
+                    // Create a Quote value from the tokens inside the quotes
+                    result.push(Token::Literal(Value::Quote(quote_tokens)));
+
+                    // Skip to after the QuoteEnd
+                    i = quote_end_index + 1;
+                }
+                _ => {
+                    result.push(tokens[i].clone());
+                    i += 1;
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Extract tokens between QuoteStart and QuoteEnd
+    fn extract_quote(&self, tokens: &[Token], start: usize) -> Result<Vec<Token>> {
+        let mut quote_tokens = Vec::new();
+        let mut depth = 0;
+        let mut i = start;
+
+        while i < tokens.len() {
+            match &tokens[i] {
+                Token::QuoteStart => {
+                    depth += 1;
+                    if depth > 1 {
+                        // Nested quote - include the QuoteStart token
+                        quote_tokens.push(tokens[i].clone());
+                    }
+                }
+                Token::QuoteEnd => {
+                    depth -= 1;
+                    if depth == 0 {
+                        // Found matching end quote
+                        break;
+                    } else {
+                        // Nested quote - include the QuoteEnd token
+                        quote_tokens.push(tokens[i].clone());
+                    }
+                }
+                _ => {
+                    if depth > 0 {
+                        quote_tokens.push(tokens[i].clone());
+                    }
+                }
+            }
+            i += 1;
+        }
+
+        if depth > 0 {
+            return Err(ChronosError::parse_error("Unclosed quote", None, None));
+        }
+
+        // Recursively process nested quotes
+        self.process_quotes(quote_tokens)
+    }
+
+    /// Find the index of the matching QuoteEnd for a QuoteStart at the given index
+    fn find_quote_end(&self, tokens: &[Token], start: usize) -> Result<usize> {
+        let mut depth = 0;
+        let mut i = start;
+
+        while i < tokens.len() {
+            match &tokens[i] {
+                Token::QuoteStart => depth += 1,
+                Token::QuoteEnd => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return Ok(i);
+                    }
+                }
+                _ => {}
+            }
+            i += 1;
+        }
+
+        Err(ChronosError::parse_error("Unclosed quote", None, None))
+    }
+
     /// Execute a sequence of tokens
     pub fn execute_tokens(&mut self, tokens: &[Token]) -> Result<()> {
         self.vm
             .execute_tokens(tokens)
             .map_err(|e| ChronosError::runtime_error(e.to_string(), None))
+    }
+
+    /// Execute source code with quote parsing
+    pub fn eval_source(&mut self, source: &str) -> Result<()> {
+        let tokens = self.parse(source)?;
+        self.execute_tokens(&tokens)
     }
 
     /// Execute a single token
