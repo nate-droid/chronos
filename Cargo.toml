@@ -1,13 +1,60 @@
+[workspace]
+members = [
+    ".",
+    "chronos-core",
+    "chronos-repl"
+]
+resolver = "2"
+
 [package]
 name = "chronos"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+description = "Categorical ∀xiomatic Ordinal programming language - main crate"
+repository = "https://github.com/chronos-lang/chronos"
+license = "MIT OR Apache-2.0"
+keywords = ["concatenative", "stack-based", "ordinal", "categorical", "theorem-proving"]
+categories = ["development-tools", "programming-languages"]
 
 [lib]
 name = "chronos"
 path = "src/lib.rs"
 
 [dependencies]
+chronos-core = { path = "chronos-core" }
+chronos-repl = { path = "chronos-repl", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "1.0", features = ["v4"] }
+
+[features]
+default = ["repl"]
+repl = ["chronos-repl"]
+
+[[bin]]
+name = "test_all"
+path = "src/bin/test_all.rs"
+
+[[bin]]
+name = "simple_test"
+path = "src/bin/simple_test.rs"
+
+[dev-dependencies]
+tempfile = "3.0"
+
+# Workspace-wide configuration
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+crossterm = "0.27"
+console = "0.15"
+syntect = "5.1"
+rustyline = "13.0"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+repository = "https://github.com/chronos-lang/chronos"
+license = "MIT OR Apache-2.0"

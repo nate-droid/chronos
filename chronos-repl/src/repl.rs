@@ -5,7 +5,9 @@
 //! tracing, performance monitoring, and enhanced user experience features.
 
 use crate::commands::{ReplCommand, execute_command, parse_command};
-use crate::display::{format_duration, format_stack};
+use crate::display::{
+    DisplayConfig, format_duration, format_error, format_help, format_info, format_stack_rich,
+};
 use crate::error::{ReplError, Result};
 use crate::session::Session;
 use crate::tracing::{ExecutionTrace, OperationCategory, TraceContext, TraceEntry};
@@ -45,20 +47,26 @@ pub struct ReplConfig {
 
     /// Whether to show welcome message
     pub show_welcome: bool,
+
+    /// Display configuration for rich formatting
+    pub display: DisplayConfig,
 }
 
 impl Default for ReplConfig {
     fn default() -> Self {
+        let display = DisplayConfig::default();
+
         Self {
             show_stack: false,
             show_timing: false,
-            use_colors: true,
-            max_stack_display: 10,
+            use_colors: display.use_colors,
+            max_stack_display: display.max_stack_items,
             auto_save: false,
             auto_save_interval: 300, // 5 minutes
-            default_session_file: "session.json".to_string(),
+            default_session_file: "chronos_session.json".to_string(),
             prompt: "C∀O> ".to_string(),
             show_welcome: true,
+            display,
         }
     }
 }
@@ -162,7 +170,8 @@ impl EnhancedRepl {
             // Handle auto-save
             if self.should_auto_save() {
                 if let Err(e) = self.try_auto_save() {
-                    eprintln!("Auto-save failed: {}", e);
+                    let error_msg = format!("Auto-save failed: {}", e);
+                    eprintln!("{}", format_error(&error_msg, &self.config.display));
                 }
             }
 
@@ -184,7 +193,7 @@ impl EnhancedRepl {
 
                     // Handle the input
                     if let Err(e) = self.handle_input(input) {
-                        eprintln!("Error: {}", e);
+                        eprintln!("{}", format_error(&e.to_string(), &self.config.display));
                         self.metrics.error_count += 1;
                     }
 
@@ -194,7 +203,8 @@ impl EnhancedRepl {
                     }
                 }
                 Err(e) => {
-                    eprintln!("Error reading input: {}", e);
+                    let error_msg = format!("Error reading input: {}", e);
+                    eprintln!("{}", format_error(&error_msg, &self.config.display));
                     break;
                 }
             }
@@ -203,7 +213,8 @@ impl EnhancedRepl {
         // Final save if auto-save is enabled
         if self.config.auto_save {
             if let Err(e) = self.try_auto_save() {
-                eprintln!("Final auto-save failed: {}", e);
+                let error_msg = format!("Final auto-save failed: {}", e);
+                eprintln!("{}", format_error(&error_msg, &self.config.display));
             }
         }
 
@@ -239,6 +250,59 @@ impl EnhancedRepl {
         if matches!(command, ReplCommand::Quit) {
             self.should_exit = true;
             println!("Farewell! May your axioms remain consistent.");
+            return Ok(());
+        }
+
+        // Special handling for display commands
+        match &command {
+            ReplCommand::Colors(setting) => {
+                let enabled = setting.unwrap_or(!self.config.display.use_colors);
+                self.config.display.use_colors = enabled;
+                self.config.use_colors = enabled;
+                let status = if enabled { "enabled" } else { "disabled" };
+                let message = format!("Colored output {}", status);
+                println!("{}", format_info(&message, &self.config.display));
+                return Ok(());
+            }
+            ReplCommand::Types(setting) => {
+                let enabled = setting.unwrap_or(!self.config.display.show_types);
+                self.config.display.show_types = enabled;
+                let status = if enabled { "enabled" } else { "disabled" };
+                let message = format!("Type information display {}", status);
+                println!("{}", format_info(&message, &self.config.display));
+                return Ok(());
+            }
+            ReplCommand::Compact(setting) => {
+                let enabled = setting.unwrap_or(!self.config.display.compact_stack);
+                self.config.display.compact_stack = enabled;
+                let status = if enabled { "enabled" } else { "disabled" };
+                let message = format!("Compact stack display {}", status);
+                println!("{}", format_info(&message, &self.config.display));
+                return Ok(());
+            }
+            ReplCommand::Syntax(setting) => {
+                let enabled = setting.unwrap_or(!self.config.display.highlight_syntax);
+                self.config.display.highlight_syntax = enabled;
+                let status = if enabled { "enabled" } else { "disabled" };
+                let message = format!("Syntax highlighting {}", status);
+                println!("{}", format_info(&message, &self.config.display));
+                return Ok(());
+            }
+            ReplCommand::Unicode(setting) => {
+                let enabled = setting.unwrap_or(!self.config.display.unicode_symbols);
+                self.config.display.unicode_symbols = enabled;
+                let status = if enabled { "enabled" } else { "disabled" };
+                let message = format!("Unicode symbols {}", status);
+                println!("{}", format_info(&message, &self.config.display));
+                return Ok(());
+            }
+            _ => {}
+        }
+
+        // Special handling for help command to use rich formatting
+        if matches!(command, ReplCommand::Help) {
+            let help_text = format_help(&self.config.display);
+            println!("{}", help_text);
             return Ok(());
         }
 
@@ -297,7 +361,10 @@ impl EnhancedRepl {
 
         // Show timing if configured
         if self.config.show_timing {
-            println!("Execution time: {}", format_duration(duration));
+            println!(
+                "Execution time: {}",
+                format_duration(duration, &self.config.display)
+            );
         }
 
         Ok(())
@@ -306,7 +373,7 @@ impl EnhancedRepl {
     /// Evaluate code with detailed tracing
     pub fn eval_with_trace(&mut self, input: &str) -> Result<EvalResult> {
         let start_time = Instant::now();
-        let initial_stack = self.core.get_stack();
+        let _initial_stack = self.core.get_stack();
 
         let trace_entries = if self.tracing_enabled {
             self.eval_with_tracing(input)?;
@@ -413,7 +480,7 @@ impl EnhancedRepl {
         }
 
         // Restore user-defined words
-        for (name, tokens) in self.session.user_words() {
+        for (name, _tokens) in self.session.user_words() {
             // For now, we'll need to reconstruct word definitions
             // This is a simplified approach - in practice we'd want to store
             // full word definitions in the session
@@ -440,18 +507,27 @@ impl EnhancedRepl {
 
     /// Show the current stack
     fn show_stack(&self) {
-        let stack_display = format_stack(&self.core.get_stack(), self.config.max_stack_display);
+        let stack_display = format_stack_rich(&self.core.get_stack(), &self.config.display);
         println!("{}", stack_display);
     }
 
     /// Show welcome message
     fn show_welcome(&self) {
-        println!(
-            "C∀O (Kao) - Categorical ∀xiomatic Ordinal Language v{}",
-            env!("CARGO_PKG_VERSION")
-        );
-        println!("Enhanced Interactive REPL");
-        println!("Type '.help' for available commands, '.quit' to exit");
+        use crate::display::{format_banner, format_info};
+
+        let title = format!("C∀O (Kao) v{}", env!("CARGO_PKG_VERSION"));
+        println!("{}", format_banner(&title, &self.config.display));
+        println!();
+
+        let subtitle = "Categorical ∀xiomatic Ordinal Programming Language";
+        println!("{}", format_info(subtitle, &self.config.display));
+
+        let repl_info = "Enhanced Interactive REPL";
+        println!("{}", format_info(repl_info, &self.config.display));
+        println!();
+
+        let help_hint = "Type '.help' for available commands, '.quit' to exit";
+        println!("{}", format_info(help_hint, &self.config.display));
         println!();
     }
 
@@ -497,6 +573,53 @@ impl EnhancedRepl {
         self.metrics = PerformanceMetrics::default();
         self.nesting_level = 0;
         self.should_exit = false;
+    }
+
+    /// Toggle colored output
+    pub fn toggle_colors(&mut self) -> bool {
+        self.config.display.use_colors = !self.config.display.use_colors;
+        self.config.use_colors = self.config.display.use_colors;
+        self.config.display.use_colors
+    }
+
+    /// Toggle type information display
+    pub fn toggle_types(&mut self) -> bool {
+        self.config.display.show_types = !self.config.display.show_types;
+        self.config.display.show_types
+    }
+
+    /// Toggle compact stack display
+    pub fn toggle_compact(&mut self) -> bool {
+        self.config.display.compact_stack = !self.config.display.compact_stack;
+        self.config.display.compact_stack
+    }
+
+    /// Toggle syntax highlighting
+    pub fn toggle_syntax_highlighting(&mut self) -> bool {
+        self.config.display.highlight_syntax = !self.config.display.highlight_syntax;
+        self.config.display.highlight_syntax
+    }
+
+    /// Toggle Unicode symbols
+    pub fn toggle_unicode(&mut self) -> bool {
+        self.config.display.unicode_symbols = !self.config.display.unicode_symbols;
+        self.config.display.unicode_symbols
+    }
+
+    /// Set maximum stack items to display
+    pub fn set_max_stack_display(&mut self, max_items: usize) {
+        self.config.display.max_stack_items = max_items;
+        self.config.max_stack_display = max_items;
+    }
+
+    /// Get display configuration
+    pub fn display_config(&self) -> &DisplayConfig {
+        &self.config.display
+    }
+
+    /// Get mutable display configuration
+    pub fn display_config_mut(&mut self) -> &mut DisplayConfig {
+        &mut self.config.display
     }
 }
 

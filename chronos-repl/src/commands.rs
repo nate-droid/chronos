@@ -54,6 +54,21 @@ pub enum ReplCommand {
     /// Show about information
     About,
 
+    /// Toggle colored output
+    Colors(Option<bool>),
+
+    /// Toggle type information display
+    Types(Option<bool>),
+
+    /// Toggle compact stack display
+    Compact(Option<bool>),
+
+    /// Toggle syntax highlighting
+    Syntax(Option<bool>),
+
+    /// Toggle Unicode symbols
+    Unicode(Option<bool>),
+
     /// Exit the REPL
     Quit,
 
@@ -138,6 +153,66 @@ pub fn parse_command(input: &str) -> ReplCommand {
                 ReplCommand::Set(parts[1].to_string(), parts[2..].join(" "))
             } else {
                 ReplCommand::Unknown(input.to_string())
+            }
+        }
+
+        "colors" | "color" => {
+            if parts.len() > 1 {
+                match parts[1] {
+                    "on" | "true" | "1" => ReplCommand::Colors(Some(true)),
+                    "off" | "false" | "0" => ReplCommand::Colors(Some(false)),
+                    _ => ReplCommand::Colors(None),
+                }
+            } else {
+                ReplCommand::Colors(None)
+            }
+        }
+
+        "types" | "type" => {
+            if parts.len() > 1 {
+                match parts[1] {
+                    "on" | "true" | "1" => ReplCommand::Types(Some(true)),
+                    "off" | "false" | "0" => ReplCommand::Types(Some(false)),
+                    _ => ReplCommand::Types(None),
+                }
+            } else {
+                ReplCommand::Types(None)
+            }
+        }
+
+        "compact" => {
+            if parts.len() > 1 {
+                match parts[1] {
+                    "on" | "true" | "1" => ReplCommand::Compact(Some(true)),
+                    "off" | "false" | "0" => ReplCommand::Compact(Some(false)),
+                    _ => ReplCommand::Compact(None),
+                }
+            } else {
+                ReplCommand::Compact(None)
+            }
+        }
+
+        "syntax" | "highlight" => {
+            if parts.len() > 1 {
+                match parts[1] {
+                    "on" | "true" | "1" => ReplCommand::Syntax(Some(true)),
+                    "off" | "false" | "0" => ReplCommand::Syntax(Some(false)),
+                    _ => ReplCommand::Syntax(None),
+                }
+            } else {
+                ReplCommand::Syntax(None)
+            }
+        }
+
+        "unicode" | "symbols" => {
+            if parts.len() > 1 {
+                match parts[1] {
+                    "on" | "true" | "1" => ReplCommand::Unicode(Some(true)),
+                    "off" | "false" | "0" => ReplCommand::Unicode(Some(false)),
+                    _ => ReplCommand::Unicode(None),
+                }
+            } else {
+                ReplCommand::Unicode(None)
             }
         }
 
@@ -297,6 +372,31 @@ pub fn execute_command(
 
         ReplCommand::About => Ok(get_about_text()),
 
+        ReplCommand::Colors(_) => {
+            // This will be handled by the REPL implementation
+            Ok("Color toggle command received".to_string())
+        }
+
+        ReplCommand::Types(_) => {
+            // This will be handled by the REPL implementation
+            Ok("Type display toggle command received".to_string())
+        }
+
+        ReplCommand::Compact(_) => {
+            // This will be handled by the REPL implementation
+            Ok("Compact display toggle command received".to_string())
+        }
+
+        ReplCommand::Syntax(_) => {
+            // This will be handled by the REPL implementation
+            Ok("Syntax highlighting toggle command received".to_string())
+        }
+
+        ReplCommand::Unicode(_) => {
+            // This will be handled by the REPL implementation
+            Ok("Unicode symbols toggle command received".to_string())
+        }
+
         ReplCommand::Quit => Ok("Goodbye!".to_string()),
 
         ReplCommand::Unknown(cmd) => Err(ReplError::command(format!("Unknown command: {}", cmd))),
@@ -325,6 +425,13 @@ Debugging & Analysis:
   .metrics, .m       - Show performance metrics
   .history           - Show command history
   .showtrace [n]     - Show last n trace entries (default: 10)
+
+Display Options:
+  .colors [on/off]   - Toggle colored output
+  .types [on/off]    - Toggle type information display
+  .compact [on/off]  - Toggle compact stack display
+  .syntax [on/off]   - Toggle syntax highlighting
+  .unicode [on/off]  - Toggle Unicode symbols
 
 Configuration:
   .set <key> <value> - Set configuration option
