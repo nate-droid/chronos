@@ -14,7 +14,6 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fs;
 use std::path::Path;
-use std::process::Command;
 use std::time::{Duration, Instant};
 
 /// Errors that can occur in the REPL
@@ -24,8 +23,6 @@ pub enum ReplError {
     ParseError(ParseError),
     /// VM execution error
     VmError(VmError),
-    /// Type checking error
-    TypeError(String),
     /// Definition error
     DefinitionError(String),
     /// I/O error
@@ -39,7 +36,6 @@ impl fmt::Display for ReplError {
         match self {
             ReplError::ParseError(e) => write!(f, "Parse error: {}", e),
             ReplError::VmError(e) => write!(f, "Runtime error: {}", e),
-            ReplError::TypeError(e) => write!(f, "Type error: {}", e),
             ReplError::DefinitionError(e) => write!(f, "Definition error: {}", e),
             ReplError::IoError(e) => write!(f, "I/O error: {}", e),
             ReplError::SessionError(e) => write!(f, "Session error: {}", e),
@@ -1102,7 +1098,7 @@ impl Repl {
 
         // Create CA directly
         let width = 79;
-        let mut ca = if let Some(p) = pattern {
+        let ca = if let Some(p) = pattern {
             self.create_ca_with_pattern(width, rule, p)
         } else {
             self.create_ca_single_seed(width, rule)
@@ -1371,7 +1367,7 @@ mod tests {
 
         // Check that 7 is on the stack
         assert_eq!(repl.vm.stack().len(), 1);
-        if let crate::types::Value::Nat(n) = &repl.vm.stack()[0] {
+        if let Value::Nat(n) = &repl.vm.stack()[0] {
             assert_eq!(*n, 7);
         } else {
             panic!("Expected Nat(7) on stack");
@@ -1395,7 +1391,7 @@ mod tests {
 
         // Check result
         assert_eq!(repl.vm.stack().len(), 1);
-        if let crate::types::Value::Nat(n) = &repl.vm.stack()[0] {
+        if let Value::Nat(n) = &repl.vm.stack()[0] {
             assert_eq!(*n, 10);
         } else {
             panic!("Expected Nat(10) on stack");
@@ -1429,7 +1425,7 @@ mod tests {
 
         // Check that a quote is on the stack
         assert_eq!(repl.vm.stack().len(), 1);
-        if let crate::types::Value::Quote(_) = &repl.vm.stack()[0] {
+        if let Value::Quote(_) = &repl.vm.stack()[0] {
             // Success
         } else {
             panic!("Expected Quote on stack");

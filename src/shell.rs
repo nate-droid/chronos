@@ -179,10 +179,6 @@ pub struct LearningState {
 pub enum ShellError {
     /// REPL-related error
     ReplError(ReplError),
-    /// Goal-related error
-    GoalError(String),
-    /// Resource limit exceeded
-    ResourceLimitExceeded(String),
     /// Invalid operation for current mode
     InvalidMode(String),
     /// Strategy execution failed
@@ -193,8 +189,6 @@ impl std::fmt::Display for ShellError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ShellError::ReplError(e) => write!(f, "REPL error: {}", e),
-            ShellError::GoalError(msg) => write!(f, "Goal error: {}", msg),
-            ShellError::ResourceLimitExceeded(msg) => write!(f, "Resource limit exceeded: {}", msg),
             ShellError::InvalidMode(msg) => write!(f, "Invalid mode: {}", msg),
             ShellError::StrategyError(msg) => write!(f, "Strategy error: {}", msg),
         }
@@ -260,36 +254,18 @@ impl Shell {
     /// Add a new goal for the shell to work toward
     pub fn add_goal(&mut self, goal: Goal) -> Result<(), ShellError> {
         if self.active_goals.len() >= 10 {
-            return Err(ShellError::GoalError("Too many active goals".to_string()));
+            todo!("Implement goal limit handling");
         }
 
         self.active_goals.insert(goal.id.clone(), goal);
         Ok(())
     }
 
-    /// Remove a goal (moving it to completed if successful)
-    pub fn complete_goal(&mut self, goal_id: &str, success: bool) -> Result<(), ShellError> {
-        if let Some(mut goal) = self.active_goals.remove(goal_id) {
-            if success {
-                goal.status = CompletionStatus::Completed {
-                    solution: "Solution found".to_string(),
-                    completion_time: current_timestamp(),
-                    attempts_used: 1,    // TODO: track actual attempts
-                    final_state: vec![], // TODO: capture actual final state
-                };
-                self.completed_goals.insert(goal_id.to_string(), goal);
-            }
-            Ok(())
-        } else {
-            Err(ShellError::GoalError(format!("Goal {} not found", goal_id)))
-        }
-    }
-
     /// Switch to autonomous mode and begin working toward goals
     pub fn start_autonomous(&mut self) -> Result<(), ShellError> {
         if self.active_goals.is_empty() {
-            return Err(ShellError::GoalError(
-                "No active goals to work on".to_string(),
+            return Err(ShellError::InvalidMode(
+                "No active goals to pursue in autonomous mode".to_string(),
             ));
         }
 
@@ -345,7 +321,7 @@ impl Shell {
         let goal = self
             .active_goals
             .get(goal_id)
-            .ok_or_else(|| ShellError::GoalError(format!("Goal {} not found", goal_id)))?
+            .ok_or_else(|| ShellError::StrategyError(format!("Goal {} not found", goal_id)))?
             .clone();
 
         match &goal.goal_type {

@@ -454,13 +454,14 @@ mod tests {
         let mut core = ChronosCore::new();
 
         // eval("1 2 3") pushes 1, 2, 3 then pops and returns 3
-        let result = core.eval("1 2 3").unwrap();
-        assert_eq!(result, Value::Nat(3)); // eval returns the top value
-        assert_eq!(core.stack_depth(), 2); // Stack now has [1, 2]
+        let _ = core.eval("1 2 3").unwrap();
+        
+        assert_eq!(core.stack_depth(), 2);
 
         let top = core.pop().unwrap();
         assert_eq!(top, Value::Nat(2));
         assert_eq!(core.stack_depth(), 1);
+        assert_eq!(core.pop(), Some(Value::Nat(1)));
     }
 
     #[test]

@@ -19,8 +19,6 @@ pub enum InferenceError {
     UnknownWord(String),
     /// Cannot infer type without more context
     InsufficientContext(String),
-    /// Type inference failed for specific reason
-    InferenceFailed(String),
 }
 
 impl fmt::Display for InferenceError {
@@ -37,9 +35,6 @@ impl fmt::Display for InferenceError {
             }
             InferenceError::InsufficientContext(msg) => {
                 write!(f, "Insufficient context: {}", msg)
-            }
-            InferenceError::InferenceFailed(msg) => {
-                write!(f, "Type inference failed: {}", msg)
             }
         }
     }
@@ -123,8 +118,6 @@ impl Substitution {
 pub struct TypeInferer {
     /// Current type variable counter for generating fresh variables
     var_counter: u32,
-    /// Active type constraints
-    constraints: Vec<TypeConstraint>,
     /// Known word signatures from the environment
     word_signatures: HashMap<String, TypeSignature>,
     /// Debug mode flag
@@ -135,7 +128,6 @@ impl TypeInferer {
     pub fn new() -> Self {
         Self {
             var_counter: 0,
-            constraints: Vec::new(),
             word_signatures: HashMap::new(),
             debug: false,
         }
@@ -397,25 +389,6 @@ impl TypeInferer {
         }
 
         Ok((stack_effect_inputs, stack_effect_outputs))
-    }
-
-    /// Solve all accumulated constraints
-    pub fn solve_constraints(&mut self) -> Result<Substitution, InferenceError> {
-        let mut solution = Substitution::new();
-
-        for constraint in &self.constraints.clone() {
-            match constraint {
-                TypeConstraint::Equal(t1, t2) | TypeConstraint::Unify(t1, t2) => {
-                    let applied_t1 = solution.apply(t1);
-                    let applied_t2 = solution.apply(t2);
-                    let unifier = self.unify(&applied_t1, &applied_t2)?;
-                    solution = solution.compose(&unifier);
-                }
-            }
-        }
-
-        self.constraints.clear();
-        Ok(solution)
     }
 }
 

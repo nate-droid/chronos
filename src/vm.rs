@@ -22,8 +22,6 @@ pub enum VmError {
     DivisionByZero,
     /// Invalid operation
     InvalidOperation(String),
-    /// Ordinal verification failed
-    OrdinalVerificationFailed(String),
 }
 
 impl fmt::Display for VmError {
@@ -36,9 +34,6 @@ impl fmt::Display for VmError {
             VmError::UnknownWord(word) => write!(f, "Unknown word: {}", word),
             VmError::DivisionByZero => write!(f, "Division by zero"),
             VmError::InvalidOperation(msg) => write!(f, "Invalid operation: {}", msg),
-            VmError::OrdinalVerificationFailed(msg) => {
-                write!(f, "Ordinal verification failed: {}", msg)
-            }
         }
     }
 }

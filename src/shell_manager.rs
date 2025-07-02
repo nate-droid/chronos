@@ -93,7 +93,6 @@ pub struct ShellManager {
     /// Coordination strategy
     strategy: CoordinationStrategy,
     /// Shared knowledge base
-    knowledge: Arc<Mutex<SharedKnowledge>>,
     /// Resource pool and allocation
     resources: Arc<Mutex<ResourcePool>>,
     /// Manager configuration
@@ -108,7 +107,6 @@ pub struct ShellManager {
 #[derive(Debug, Clone)]
 pub struct ManagerConfig {
     pub max_shells: usize,
-    pub coordination_interval: Duration,
     pub knowledge_sync_interval: Duration,
     pub resource_check_interval: Duration,
     pub auto_load_balance: bool,
@@ -118,8 +116,6 @@ pub struct ManagerConfig {
 /// Performance metrics for the manager
 #[derive(Debug, Clone)]
 pub struct ManagerMetrics {
-    pub total_goals_completed: u64,
-    pub total_goals_failed: u64,
     pub average_completion_time: Duration,
     pub shells_created: u64,
     pub shells_destroyed: u64,
@@ -132,7 +128,6 @@ pub struct ManagerMetrics {
 pub enum ManagerError {
     ShellError(ShellError),
     ResourceError(String),
-    CoordinationError(String),
     ConfigurationError(String),
     ConcurrencyError(String),
 }
@@ -142,7 +137,6 @@ impl std::fmt::Display for ManagerError {
         match self {
             ManagerError::ShellError(e) => write!(f, "Shell error: {}", e),
             ManagerError::ResourceError(msg) => write!(f, "Resource error: {}", msg),
-            ManagerError::CoordinationError(msg) => write!(f, "Coordination error: {}", msg),
             ManagerError::ConfigurationError(msg) => write!(f, "Configuration error: {}", msg),
             ManagerError::ConcurrencyError(msg) => write!(f, "Concurrency error: {}", msg),
         }
@@ -161,7 +155,6 @@ impl Default for ManagerConfig {
     fn default() -> Self {
         Self {
             max_shells: 10,
-            coordination_interval: Duration::from_millis(100),
             knowledge_sync_interval: Duration::from_secs(5),
             resource_check_interval: Duration::from_secs(1),
             auto_load_balance: true,
@@ -173,8 +166,6 @@ impl Default for ManagerConfig {
 impl Default for ManagerMetrics {
     fn default() -> Self {
         Self {
-            total_goals_completed: 0,
-            total_goals_failed: 0,
             average_completion_time: Duration::from_secs(0),
             shells_created: 0,
             shells_destroyed: 0,
@@ -214,22 +205,8 @@ impl ShellManager {
         Self {
             shells: HashMap::new(),
             strategy: CoordinationStrategy::Independent,
-            knowledge: Arc::new(Mutex::new(SharedKnowledge::default())),
             resources: Arc::new(Mutex::new(ResourcePool::default())),
             config: ManagerConfig::default(),
-            metrics: ManagerMetrics::default(),
-            coordination_handles: Vec::new(),
-        }
-    }
-
-    /// Create a new shell manager with custom configuration
-    pub fn with_config(config: ManagerConfig) -> Self {
-        Self {
-            shells: HashMap::new(),
-            strategy: CoordinationStrategy::Independent,
-            knowledge: Arc::new(Mutex::new(SharedKnowledge::default())),
-            resources: Arc::new(Mutex::new(ResourcePool::default())),
-            config,
             metrics: ManagerMetrics::default(),
             coordination_handles: Vec::new(),
         }
@@ -329,14 +306,14 @@ impl ShellManager {
                 }
 
                 best_shell.ok_or_else(|| {
-                    ManagerError::CoordinationError("No available shell found".to_string())
+                    ManagerError::ResourceError("No available shell found".to_string())
                 })
             }
             CoordinationStrategy::Collaborative { .. } => {
                 // Select shell with most relevant experience
                 // TODO: Implement experience-based selection
                 self.shells.keys().next().cloned().ok_or_else(|| {
-                    ManagerError::CoordinationError("No available shell found".to_string())
+                    ManagerError::ResourceError("No available shell found".to_string())
                 })
             }
             CoordinationStrategy::Hierarchical { leader_id, .. } => {
@@ -345,7 +322,7 @@ impl ShellManager {
                     Ok(leader_id.clone())
                 } else {
                     self.shells.keys().next().cloned().ok_or_else(|| {
-                        ManagerError::CoordinationError("No available shell found".to_string())
+                        todo!("Handle case where leader shell is not available")
                     })
                 }
             }
@@ -353,7 +330,7 @@ impl ShellManager {
                 // Assign to multiple shells for competition
                 // For now, just pick the first available
                 self.shells.keys().next().cloned().ok_or_else(|| {
-                    ManagerError::CoordinationError("No available shell found".to_string())
+                    todo!("Handle case where shell is not available")
                 })
             }
         }
@@ -437,7 +414,6 @@ impl ShellManager {
                 if let Ok(mut shell) = shell_arc.lock() {
                     let completed_goals = shell.check_completion();
                     for goal_id in completed_goals {
-                        self.metrics.total_goals_completed += 1;
                         // TODO: Record completion time and update metrics
 
                         completions.push((shell_id.clone(), goal_id));
@@ -507,10 +483,6 @@ impl ShellManager {
             content: goal_id.to_string(),
         };
 
-        if let Ok(mut knowledge) = self.knowledge.lock() {
-            knowledge.communication_log.push(message);
-        }
-
         Ok(())
     }
 
@@ -530,8 +502,8 @@ impl ShellManager {
              - Coordination Events: {}\n\
              - Knowledge Shares: {}",
             self.shells.len(),
-            self.metrics.total_goals_completed,
-            self.metrics.total_goals_failed,
+            0,
+            0,
             self.metrics.shells_created,
             self.metrics.coordination_events,
             self.metrics.knowledge_shares

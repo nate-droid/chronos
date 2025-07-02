@@ -59,7 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for gen in 1..=3 {
         ca.step();
         println!("Generation {}:", gen);
-        println!("{}", ca.to_string());
+        println!("{:?}", ca.to_string());
         println!(
             "Active cells: {}, Density: {:.1}%\n",
             ca.active_count(),

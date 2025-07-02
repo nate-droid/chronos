@@ -3,7 +3,7 @@
 //! This example demonstrates the fundamental operations of the C∀O language
 //! including arithmetic, stack manipulation, and basic control flow.
 
-use chronos_core::{ChronosCore, ChronosError, Value};
+use chronos_core::{ChronosCore, Value};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Chronos Core Basic Evaluation Example ===\n");

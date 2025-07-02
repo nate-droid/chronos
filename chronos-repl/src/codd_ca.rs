@@ -10,6 +10,7 @@
 //! - Interactive evolution controls
 //! - Multiple pattern types (signal transmission, replicators)
 
+use std::fmt::Display;
 use crate::error::Result;
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
@@ -390,6 +391,18 @@ impl CoddCA {
         if self.history.len() > 100 {
             self.history.remove(0);
         }
+    }
+}
+
+impl Display for CoddCA {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for row in &self.grid {
+            for &cell in row {
+                write!(f, "{}", cell.to_char())?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }
 
