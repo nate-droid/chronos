@@ -12,8 +12,8 @@
 //! use chronos_core::{ChronosCore, Value};
 //!
 //! let mut core = ChronosCore::new();
-//! let result = core.eval("3 4 +").unwrap();
-//! assert_eq!(result, Value::Nat(7));
+//! core.eval("3 4 +").unwrap();
+//! assert_eq!(core.pop().unwrap(), Value::Nat(7));
 //! ```
 //!
 //! ## Architecture
@@ -87,8 +87,8 @@ impl ChronosCore {
     /// use chronos_core::{ChronosCore, Value};
     ///
     /// let mut core = ChronosCore::new();
-    /// let result = core.eval("3 4 +").unwrap();
-    /// assert_eq!(result, Value::Nat(7));
+    /// core.eval("3 4 +").unwrap();
+    /// assert_eq!(core.pop().unwrap(), Value::Nat(7));
     /// ```
     pub fn eval(&mut self, source: &str) -> Result<Value> {
         let tokens = self.tokenize(source)?;

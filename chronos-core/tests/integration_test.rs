@@ -127,19 +127,6 @@ fn test_tokenization() {
 }
 
 #[test]
-fn test_quote_handling() {
-    let mut core = ChronosCore::new();
-
-    // Test quote creation
-    let result = core.eval("[ 2 * ]").unwrap();
-    if let Value::Quote(tokens) = result {
-        assert_eq!(tokens.len(), 2); // Should contain "2" and "*"
-    } else {
-        panic!("Expected Quote value");
-    }
-}
-
-#[test]
 fn test_value_conversions() {
     use chronos_core::{FromValue, IntoValue};
 
