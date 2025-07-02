@@ -2,7 +2,13 @@
 
 > **C∀O (Kao)** - *Categorical ∀xiomatic Ordinal*
 
-A revolutionary programming language that evolves through mathematical proof and community collaboration.
+# A Note on AI
+
+I initially used Zed + LLM's to bootstrap some of the early stages of the project. Part of my initial goals were to try 
+and see how one could leverage LLM agents in "useful" ways. I've traditionally been something of a skeptic of AI. Whilst 
+the early parts of the project seemed great, this quickly melted down into a mess of spaghetti code. Despite the mess,
+I've grown fond of this project and am spending time ripping out a lot of the AI code, and getting back to artisinally
+crafted code.
 
 [![Rust](https://img.shields.io/badge/rust-2024-orange.svg)](https://rustlang.org)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -185,7 +191,6 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for current development priorities.
 - [**Project Status**](PROJECT_STATUS.md) - Current development state
 - [**Implementation Guide**](IMPLEMENTATION_GUIDE.md) - Developer workflow
 - [**Architecture Guide**](ARCHITECTURE_GUIDE.md) - Codebase overview
-- [**Development Roadmap**](DEVELOPMENT_ROADMAP.md) - Future plans
 
 ## 📄 License
 

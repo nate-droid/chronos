@@ -11,7 +11,6 @@ Chronos Core provides the essential components for parsing, type checking, and e
 - **Concatenative Programming**: Postfix notation with stack-based computation
 - **Categorical Type System**: Types as objects, functions as morphisms
 - **Ordinal Analysis**: Termination guarantees through proof theory
-- **Pure Functional Core**: No side effects in the language runtime
 - **Extensible Architecture**: Support for user-defined types and operations
 - **Comprehensive Error Handling**: Detailed error reporting with context
 
@@ -301,89 +300,6 @@ C∀O is built on solid mathematical principles:
 - **Programs as Proofs**: Programs are constructive proofs
 - **Curry-Howard**: Deep connection between computation and logic
 
-## Performance Considerations
-
-### Benchmarking
-
-```rust
-use std::time::Instant;
-use chronos_core::ChronosCore;
-
-let mut core = ChronosCore::new();
-let start = Instant::now();
-
-for _ in 0..1000 {
-    core.eval("1 1 + drop")?;
-}
-
-println!("1000 operations took: {:?}", start.elapsed());
-```
-
-### Optimization Tips
-
-- **Batch Operations**: Use `execute_tokens()` for multiple operations
-- **Stack Reuse**: Avoid unnecessary `clear_stack()` calls  
-- **Word Definitions**: Define frequently used operations as words
-- **Error Handling**: Use `Result` pattern for better performance
-
-## Integration
-
-### With Higher-Level Modules
-
-Chronos Core is designed to be extended by other modules:
-
-```rust
-// In chronos-repl
-use chronos_core::{ChronosCore, Value};
-
-struct EnhancedRepl {
-    core: ChronosCore,
-    // ... additional REPL features
-}
-
-impl EnhancedRepl {
-    pub fn eval_with_trace(&mut self, input: &str) -> Result<(Value, TraceInfo)> {
-        // Use core.eval() and add tracing
-        let result = self.core.eval(input)?;
-        // ... tracing logic
-        Ok((result, trace_info))
-    }
-}
-```
-
-### Custom Extensions
-
-```rust
-use chronos_core::{ChronosCore, Value, WordDefinition, TypeSignature};
-
-// Add custom words
-let mut core = ChronosCore::new();
-
-let custom_word = WordDefinition {
-    name: "double".to_string(),
-    signature: TypeSignature {
-        inputs: vec![Type::Nat],
-        outputs: vec![Type::Nat],
-    },
-    body: vec![Token::Literal(Value::Nat(2)), Token::Word("*".to_string())],
-    is_axiom: false,
-    ordinal_cost: OrdinalValue::Finite(1),
-};
-
-core.define_word("double".to_string(), custom_word)?;
-let result = core.eval("5 double")?;  // Result: 10
-```
-
-## Contributing
-
-Chronos Core follows strict mathematical principles. When contributing:
-
-1. **Maintain Purity**: No side effects in core operations
-2. **Preserve Termination**: All operations must terminate
-3. **Type Safety**: Maintain categorical type discipline
-4. **Test Coverage**: Add comprehensive tests for new features
-5. **Documentation**: Document mathematical foundations
-
 ## License
 
 Licensed under either of:
@@ -392,13 +308,6 @@ Licensed under either of:
 - MIT License
 
 at your option.
-
-## Related Crates
-
-- **chronos-repl**: Interactive development environment
-- **chronos-verification**: Ordinal analysis and proof checking
-- **chronos-distributed**: Distributed computing capabilities
-- **chronos-tooling**: Development automation tools
 
 ---
 
