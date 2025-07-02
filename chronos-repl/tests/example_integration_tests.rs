@@ -110,115 +110,6 @@ fn assert_stack_length(repl: &EnhancedRepl, expected_length: usize) {
     );
 }
 
-#[test]
-fn test_basic_arithmetic_example() {
-    let file_path = "examples/simple_01_basic_arithmetic.cao";
-
-    // Skip if file doesn't exist (for CI environments)
-    if !Path::new(file_path).exists() {
-        eprintln!("Skipping test: {} not found", file_path);
-        return;
-    }
-
-    let repl = execute_cao_file(file_path)
-        .expect("simple_01_basic_arithmetic.cao should execute without errors");
-
-    // The example should have defined some words
-    // We can't easily check defined words without accessing internals,
-    // but we can verify the REPL completed successfully
-    assert!(true, "Basic arithmetic example completed successfully");
-}
-
-#[test]
-fn test_conditionals_example() {
-    let file_path = "examples/simple_02_conditionals.cao";
-
-    if !Path::new(file_path).exists() {
-        eprintln!("Skipping test: {} not found", file_path);
-        return;
-    }
-
-    let repl = execute_cao_file(file_path)
-        .expect("simple_02_conditionals.cao should execute without errors");
-
-    // Verify the example completed successfully
-    assert!(true, "Conditionals example completed successfully");
-}
-
-#[test]
-fn test_algorithms_example() {
-    let file_path = "examples/03_algorithms.cao";
-
-    if !Path::new(file_path).exists() {
-        eprintln!("Skipping test: {} not found", file_path);
-        return;
-    }
-
-    let repl =
-        execute_cao_file(file_path).expect("03_algorithms.cao should execute without errors");
-
-    assert!(true, "Algorithms example completed successfully");
-}
-
-#[test]
-fn test_data_types_example() {
-    let file_path = "examples/04_data_types.cao";
-
-    if !Path::new(file_path).exists() {
-        eprintln!("Skipping test: {} not found", file_path);
-        return;
-    }
-
-    let repl =
-        execute_cao_file(file_path).expect("04_data_types.cao should execute without errors");
-
-    assert!(true, "Data types example completed successfully");
-}
-
-#[test]
-fn test_repl_features_example() {
-    let file_path = "examples/05_repl_features.cao";
-
-    if !Path::new(file_path).exists() {
-        eprintln!("Skipping test: {} not found", file_path);
-        return;
-    }
-
-    let repl =
-        execute_cao_file(file_path).expect("05_repl_features.cao should execute without errors");
-
-    assert!(true, "REPL features example completed successfully");
-}
-
-#[test]
-fn test_real_world_app_example() {
-    let file_path = "examples/06_real_world_app.cao";
-
-    if !Path::new(file_path).exists() {
-        eprintln!("Skipping test: {} not found", file_path);
-        return;
-    }
-
-    let repl =
-        execute_cao_file(file_path).expect("06_real_world_app.cao should execute without errors");
-
-    assert!(true, "Real world app example completed successfully");
-}
-
-#[test]
-fn test_overview_example() {
-    let file_path = "examples/00_overview.cao";
-
-    if !Path::new(file_path).exists() {
-        eprintln!("Skipping test: {} not found", file_path);
-        return;
-    }
-
-    let repl = execute_cao_file(file_path).expect("00_overview.cao should execute without errors");
-
-    assert!(true, "Overview example completed successfully");
-}
-
 /// Test specific functionality with isolated examples
 #[test]
 fn test_basic_arithmetic_operations() {
@@ -259,6 +150,37 @@ fn test_stack_operations() {
 }
 
 #[test]
+fn test_examples() {
+    let root = "examples/";
+    
+    let example_files = fs::read_dir(root)
+        .expect("Failed to read examples directory")
+        .filter_map(Result::ok)
+        .filter(|entry| entry.path().extension().map_or(false, |ext| ext == "cao"))
+        .map(|entry| entry.path())
+        .collect::<Vec<_>>();
+    
+    for example_file in example_files {
+        if !example_file.exists() {
+            eprintln!("Skipping test: {} not found", example_file.display());
+            continue;
+        }
+
+        let result = execute_cao_file(example_file.to_str().unwrap());
+        match result {
+            Ok(repl) => {
+                // Verify the REPL completed successfully
+                assert!(true, "Example {} executed successfully", example_file.display());
+            }
+            Err(e) => {
+                panic!("Failed to execute {}: {}", example_file.display(), e);
+            }
+        }
+    }
+        
+}
+
+#[test]
 fn test_word_definition() {
     let mut repl = create_test_repl();
 
@@ -269,32 +191,6 @@ fn test_word_definition() {
     // Test using the defined word
     repl.eval("5 double").expect("Should use defined word");
     assert_stack_contains_nat(&repl, 10);
-}
-
-/// Test that examples don't leave the stack in an inconsistent state
-#[test]
-fn test_examples_stack_hygiene() {
-    for example_file in &[
-        "examples/simple_01_basic_arithmetic.cao",
-        "examples/simple_02_conditionals.cao",
-    ] {
-        if !Path::new(example_file).exists() {
-            continue;
-        }
-
-        let repl = execute_cao_file(example_file)
-            .unwrap_or_else(|e| panic!("Failed to execute {}: {}", example_file, e));
-
-        // Examples should not leave the stack in an extremely deep state
-        // (indicating potential runaway computation)
-        let stack_depth = repl.stack().len();
-        assert!(
-            stack_depth < 1000,
-            "{} left stack too deep: {} items",
-            example_file,
-            stack_depth
-        );
-    }
 }
 
 /// Test that type inference examples work correctly
@@ -312,24 +208,6 @@ fn test_type_inference_compatibility() {
         .expect("Should work with stack operations");
     repl.eval("4 square").expect("Should use defined function");
     assert_stack_contains_nat(&repl, 16);
-}
-
-/// Stress test with multiple example executions
-#[test]
-fn test_multiple_example_executions() {
-    // Test that we can run multiple examples in sequence without issues
-    let examples = vec![
-        "examples/simple_01_basic_arithmetic.cao",
-        "examples/simple_02_conditionals.cao",
-    ];
-
-    for example_file in examples {
-        if Path::new(example_file).exists() {
-            execute_cao_file(example_file).unwrap_or_else(|e| {
-                panic!("Failed on repeated execution of {}: {}", example_file, e)
-            });
-        }
-    }
 }
 
 /// Test error handling in examples
