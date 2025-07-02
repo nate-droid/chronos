@@ -8,12 +8,16 @@ use chronos_core::{ChronosCore, Value};
 #[test]
 fn test_basic_language_operations() {
     let mut core = ChronosCore::new();
-
+    
     // Test arithmetic
-    assert_eq!(core.eval("5 3 +").unwrap(), Value::Nat(8));
-    assert_eq!(core.eval("10 4 -").unwrap(), Value::Nat(6));
-    assert_eq!(core.eval("6 7 *").unwrap(), Value::Nat(42));
-    assert_eq!(core.eval("20 4 /").unwrap(), Value::Nat(5));
+    core.eval("5 3 +").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Nat(8));
+    core.eval("10 4 -").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Nat(6));
+    core.eval("6 7 *").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Nat(42));
+    core.eval("20 4 /").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Nat(5));
 }
 
 #[test]
@@ -46,14 +50,20 @@ fn test_boolean_operations() {
     let mut core = ChronosCore::new();
 
     // Test boolean literals
-    assert_eq!(core.eval("true").unwrap(), Value::Bool(true));
-    assert_eq!(core.eval("false").unwrap(), Value::Bool(false));
+    core.eval("true").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Bool(true));
+    core.eval("false").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Bool(false));
 
     // Test comparisons
-    assert_eq!(core.eval("5 3 >").unwrap(), Value::Bool(true));
-    assert_eq!(core.eval("2 8 <").unwrap(), Value::Bool(true));
-    assert_eq!(core.eval("4 4 =").unwrap(), Value::Bool(true));
-    assert_eq!(core.eval("7 3 =").unwrap(), Value::Bool(false));
+    core.eval("5 3 >").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Bool(true));
+    core.eval("2 8 <").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Bool(true));
+    core.eval("4 4 =").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Bool(true));
+    core.eval("7 3 =").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Bool(false));
 }
 
 #[test]
@@ -61,8 +71,8 @@ fn test_complex_expressions() {
     let mut core = ChronosCore::new();
 
     // Test compound arithmetic: (5 + 3) * (6 - 2) = 8 * 4 = 32
-    let result = core.eval("5 3 + 6 2 - *").unwrap();
-    assert_eq!(result, Value::Nat(32));
+    core.eval("5 3 + 6 2 - *").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Nat(32));
 
     // Test nested stack operations
     core.clear_stack();
@@ -190,8 +200,8 @@ fn test_reset_functionality() {
     assert_eq!(core.stack_depth(), 0);
 
     // Should still be able to evaluate
-    let result = core.eval("3 4 +").unwrap();
-    assert_eq!(result, Value::Nat(7));
+    core.eval("3 4 +").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Nat(7));
 }
 
 #[test]
@@ -256,7 +266,7 @@ fn test_error_recovery() {
     // Should still be able to evaluate correctly after error
     let result = core.eval("5 5 +");
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), Value::Nat(10));
+    assert_eq!(core.pop().unwrap(), Value::Nat(10));
 }
 
 #[test]
@@ -278,18 +288,18 @@ fn test_comprehensive_workflow() {
     core.push(Value::Nat(5));
 
     // 2. Perform arithmetic
-    let result = core.eval("+").unwrap();
-    assert_eq!(result, Value::Nat(15));
+    core.eval("+").unwrap();
+    assert_eq!(core.pop().unwrap(), Value::Nat(15));
 
     // 3. Duplicate and manipulate
     core.push(Value::Nat(3));
     core.eval("dup *").unwrap(); // 3 * 3 = 9
-    assert_eq!(core.stack_depth(), 0);
+    assert_eq!(core.stack_depth(), 1);
 
     // 4. Compare with previous result
     core.push(Value::Nat(15));
-    let comparison = core.eval("<").unwrap(); // 9 < 15 = true
-    assert_eq!(comparison, Value::Bool(true));
+    core.eval("<").unwrap(); // 9 < 15 = true
+    assert_eq!(core.pop().unwrap(), Value::Bool(true));
 
     // 5. Final state should be clean
     assert_eq!(core.stack_depth(), 0);

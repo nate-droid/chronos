@@ -250,6 +250,9 @@ impl VirtualMachine {
                 // Comments are ignored during execution
                 Ok(())
             }
+            Token::QuoteStart => {
+                todo!("Quote execution not implemented yet");
+            }
             _ => Err(VmError::InvalidOperation(format!(
                 "Cannot execute token: {:?}",
                 token

@@ -94,13 +94,14 @@ impl ChronosCore {
         let tokens = self.tokenize(source)?;
         self.execute_tokens(&tokens)?;
 
-        if self.vm.stack().is_empty() {
-            Ok(Value::Unit)
-        } else {
-            self.vm
-                .pop()
-                .map_err(|e| ChronosError::runtime_error(e.to_string(), None))
-        }
+        // TODO: No longer popping a value from the stack on eval
+        // that should only be explicitly happening with a pop or "." command
+        
+        // if self.vm.stack().is_empty() {
+        //     return Ok(Value::Unit);
+        // }
+        Ok(Value::Unit)
+        
     }
 
     /// Tokenize source code into a token stream
@@ -445,23 +446,23 @@ mod tests {
     #[test]
     fn test_basic_arithmetic() {
         let mut core = ChronosCore::new();
-        let result = core.eval("3 4 +").unwrap();
-        assert_eq!(result, Value::Nat(7));
+        core.eval("3 4 +").unwrap();
+        assert_eq!(core.pop().unwrap(), Value::Nat(7));
     }
 
     #[test]
     fn test_stack_operations() {
         let mut core = ChronosCore::new();
 
-        // eval("1 2 3") pushes 1, 2, 3 then pops and returns 3
+        // eval("1 2 3") pushes 1, 2, 3
         let _ = core.eval("1 2 3").unwrap();
         
-        assert_eq!(core.stack_depth(), 2);
+        assert_eq!(core.stack_depth(), 3);
 
         let top = core.pop().unwrap();
-        assert_eq!(top, Value::Nat(2));
-        assert_eq!(core.stack_depth(), 1);
-        assert_eq!(core.pop(), Some(Value::Nat(1)));
+        assert_eq!(top, Value::Nat(3));
+        assert_eq!(core.stack_depth(), 2);
+        assert_eq!(core.pop(), Some(Value::Nat(2)));
     }
 
     #[test]
