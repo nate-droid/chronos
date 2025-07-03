@@ -1,7 +1,8 @@
 //! Test program for new REPL functionality
 //! This tests the new help, words, and theorem proving commands
 
-use crate::repl::Repl;
+use chronos_repl::EnhancedRepl;
+// use crate::repl::Repl;
 use crate::vm::VirtualMachine;
 
 #[cfg(test)]
@@ -23,7 +24,7 @@ mod tests {
 
     #[test]
     fn test_theorem_proving_commands() {
-        let mut repl = Repl::new();
+        let mut repl = EnhancedRepl::new();
 
         // Test axioms command
         let result = repl.eval(".axioms");
@@ -52,7 +53,7 @@ mod tests {
 
     #[test]
     fn test_basic_functionality_still_works() {
-        let mut repl = Repl::new();
+        let mut repl = EnhancedRepl::new();
 
         // Test basic arithmetic
         let result = repl.eval("3 4 +");
@@ -75,7 +76,7 @@ mod tests {
 
     #[test]
     fn test_axiom_and_theorem_tracking() {
-        let mut repl = Repl::new();
+        let mut repl = EnhancedRepl::new();
 
         // Define a type signature and declare as axiom
         let result = repl.eval(":: identity ( a -> a ) ;");
@@ -122,7 +123,7 @@ pub fn test_words_command() {
 
 pub fn test_new_repl_commands() {
     println!("Testing new REPL commands...");
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     let commands = [
         ".axioms",

@@ -26,80 +26,9 @@ true false
 
 .clear
 
-( ========================================= )
-( Quote Types (Code as Data) )
-( ========================================= )
-
-( Quotes represent code blocks as first-class data )
-[ 2 3 + ]
-.s  ( Stack contains a quote )
-
-( Execute a quote )
-[ 5 dup * ] call
-.s  ( Should show [25] )
-
-.clear
-
 ( Store multiple quotes )
 [ 1 + ] [ 2 * ] [ dup ]
 .s  ( Stack: [increment, double, duplicate] )
-
-.clear
-
-( ========================================= )
-( Defining Custom Types )
-( ========================================= )
-
-( Define a Point type with x and y coordinates )
-:: Point ( Nat Nat -> Point ) ;
-type Point { x::Nat, y::Nat }
-
-( Create Point construction word )
-:: make_point ( Nat Nat -> Point ) ;
-: make_point Point ;
-
-( Create some points )
-3 4 make_point
-.s  ( Stack: [Point(3,4)] )
-
-0 0 make_point
-.s  ( Stack: [Point(3,4), Point(0,0)] )
-
-.clear
-
-( ========================================= )
-( Working with Point Operations )
-( ========================================= )
-
-( Define point accessors )
-:: point_x ( Point -> Nat ) ;
-: point_x .x ;  ( Extract x field )
-
-:: point_y ( Point -> Nat ) ;
-: point_y .y ;  ( Extract y field )
-
-( Test point operations )
-5 7 make_point
-dup point_x
-.s  ( Should show [Point(5,7), 5] )
-
-point_y
-.s  ( Should show [5, 7] )
-
-.clear
-
-( Define point arithmetic )
-:: point_add ( Point Point -> Point ) ;
-: point_add
-  over point_x over point_x +  ( x1 + x2 )
-  rot point_y rot point_y +    ( y1 + y2 )
-  make_point ;
-
-( Test point addition )
-1 2 make_point
-3 4 make_point
-point_add
-.s  ( Should show [Point(4,6)] )
 
 .clear
 
@@ -339,32 +268,6 @@ type Triangle { a::Nat, b::Nat, c::Nat }
 
 3 4 5 make_triangle shape_area
 .s  ( Triangle area ≈ 18 )
-
-.clear
-
-( ========================================= )
-( Type Checking and Validation )
-( ========================================= )
-
-( Define type validation functions )
-:: validate_point ( Point -> Bool ) ;
-: validate_point
-  dup point_x 0 >= swap point_y 0 >= and ;
-
-:: validate_circle ( Shape -> Bool ) ;
-: validate_circle
-  dup typeof "Circle" = [
-    .radius 0 >
-  ] [
-    drop false
-  ] if ;
-
-( Test validations )
-5 7 make_point validate_point
-.s  ( Should show [true] )
-
-3 make_circle validate_circle
-.s  ( Should show [true, true] )
 
 .clear
 

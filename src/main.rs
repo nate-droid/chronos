@@ -12,7 +12,7 @@ mod hypervisor;
 mod lexer;
 mod ordinal;
 mod parser;
-mod repl;
+
 mod shell;
 mod shell_manager;
 mod type_inference;
@@ -22,7 +22,8 @@ mod vm;
 use std::io::{self, Write};
 
 use crate::hypervisor::Hypervisor;
-use crate::repl::Repl;
+
+use chronos_repl::repl;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("C∀O (Kao) - Categorical ∀xiomatic Ordinal Language v0.1.0");
@@ -31,7 +32,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Type 'hypervisor' to enter hypervisor mode");
     println!();
 
-    let mut repl = Repl::new();
+    // let mut repl = Repl::new();
+    let mut repl = repl::EnhancedRepl::new();    
 
     loop {
         print!("C∀O> ");

@@ -1,7 +1,8 @@
 //! Showcase of Chronos C∀O Theorem Proving Improvements
 //! This is a non-interactive demo that shows off the new features
 
-use chronos::repl::Repl;
+use chronos_repl::EnhancedRepl;
+// use chronos::repl::Repl;
 use chronos::vm::VirtualMachine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -70,7 +71,7 @@ fn demo_enhanced_repl_commands() -> Result<(), Box<dyn std::error::Error>> {
     println!("We've added powerful new REPL commands for theorem proving:");
     println!();
 
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     // Set up some context first
     execute_quietly(&mut repl, ":: identity ( a -> a ) ;")?;
@@ -116,7 +117,7 @@ fn demo_theorem_proving_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("Let's see the improved workflow for proving mathematical statements:");
     println!();
 
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     println!("Step 1: Define mathematical objects");
     println!("   Declaring square function:");
@@ -156,7 +157,7 @@ fn demo_mathematical_theory_building() -> Result<(), Box<dyn std::error::Error>>
     println!("The enhanced REPL makes it easy to build mathematical theories:");
     println!();
 
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     println!("Building a small theory of natural numbers:");
     println!();
@@ -201,7 +202,7 @@ fn demo_advanced_features() -> Result<(), Box<dyn std::error::Error>> {
     println!("The enhanced REPL includes powerful debugging and analysis tools:");
     println!();
 
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     // Set up
     execute_quietly(&mut repl, ":: factorial ( Nat -> Nat ) ;")?;
@@ -242,7 +243,7 @@ fn demo_advanced_features() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn execute_and_show(repl: &mut Repl, command: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn execute_and_show(repl: &mut EnhancedRepl, command: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("   > {}", command);
     match repl.eval(command) {
         Ok(_) => {
@@ -255,7 +256,7 @@ fn execute_and_show(repl: &mut Repl, command: &str) -> Result<(), Box<dyn std::e
     Ok(())
 }
 
-fn execute_quietly(repl: &mut Repl, command: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn execute_quietly(repl: &mut EnhancedRepl, command: &str) -> Result<(), Box<dyn std::error::Error>> {
     match repl.eval(command) {
         Ok(_) => {
             // Success - continue silently

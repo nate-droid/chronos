@@ -165,6 +165,8 @@ fn test_examples() {
             eprintln!("Skipping test: {} not found", example_file.display());
             continue;
         }
+        
+        println!("testing example: {}", example_file.display());
 
         let result = execute_cao_file(example_file.to_str().unwrap());
         match result {
@@ -178,6 +180,25 @@ fn test_examples() {
         }
     }
         
+}
+
+#[test]
+fn test_single_file() {
+    let path = "examples/simple_02_conditionals.cao";
+    if !Path::new(path).exists() {
+        eprintln!("Skipping test: {} not found", path);
+        return;
+    }
+    let result = execute_cao_file(path);
+    match result {
+        Ok(repl) => {
+            // Verify the REPL completed successfully
+            assert!(true, "Single file {} executed successfully", path);
+        }
+        Err(e) => {
+            panic!("Failed to execute {}: {}", path, e);
+        }
+    }
 }
 
 #[test]

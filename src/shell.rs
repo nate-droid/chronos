@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::repl::{Repl, ReplError};
+use chronos_repl::{EnhancedRepl, ReplError};
 use crate::types::Value;
 
 /// Represents different types of goals a shell can work toward
@@ -121,7 +121,7 @@ pub enum ExecutionStrategy {
 /// Enhanced shell environment for autonomous operation
 pub struct Shell {
     /// Underlying REPL environment
-    repl: Repl,
+    repl: EnhancedRepl,
     /// Shell identifier
     id: String,
     /// Current goals being pursued
@@ -230,7 +230,7 @@ impl Shell {
     /// Create a new shell with the given identifier
     pub fn new(id: String) -> Self {
         Self {
-            repl: Repl::new(),
+            repl: EnhancedRepl::new(),
             id,
             active_goals: HashMap::new(),
             completed_goals: HashMap::new(),
@@ -479,7 +479,7 @@ impl Shell {
     }
 
     /// Get access to the underlying REPL for advanced operations
-    pub fn repl(&mut self) -> &mut Repl {
+    pub fn repl(&mut self) -> &mut EnhancedRepl {
         &mut self.repl
     }
 
