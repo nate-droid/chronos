@@ -3,10 +3,11 @@
 //! This module handles parsing of tokenized C∀O code into executable structures.
 //! It supports the concatenative syntax with postfix notation.
 
-use crate::lexer::{LexError, Lexer};
+use chronos_core::lexer::LexError;
+
 use crate::type_inference::TypeInferer;
 use chronos_core::{
-    OrdinalValue, Token, Type, TypeDefinition, TypeSignature, Value, WordDefinition,
+    OrdinalValue, Token, Type, TypeDefinition, TypeSignature, Value, WordDefinition, Lexer
 };
 use std::collections::HashMap;
 use std::fmt;

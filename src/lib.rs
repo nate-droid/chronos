@@ -9,7 +9,6 @@
 
 pub mod goal_builders;
 pub mod hypervisor;
-pub mod lexer;
 pub mod ordinal;
 pub mod parser;
 pub mod shell;

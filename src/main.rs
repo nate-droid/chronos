@@ -8,7 +8,6 @@
 
 mod goal_builders;
 mod hypervisor;
-mod lexer;
 mod ordinal;
 mod parser;
 
@@ -22,6 +21,7 @@ use std::io::{self, Write};
 use crate::hypervisor::Hypervisor;
 
 use chronos_repl::repl;
+use chronos_core;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("C∀O (Kao) - Categorical ∀xiomatic Ordinal Language v0.1.0");

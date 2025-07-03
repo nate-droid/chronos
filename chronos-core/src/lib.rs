@@ -48,10 +48,11 @@ pub use vm::VirtualMachine;
 // Internal modules
 mod core_lib;
 mod error;
-mod lexer;
+pub mod lexer;
 mod types;
 mod vm;
 // mod parser; // Temporarily disabled until type_inference is available
+
 
 /// Main interface for the Chronos Core language runtime
 ///
