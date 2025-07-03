@@ -14,14 +14,12 @@ mod parser;
 mod shell;
 mod shell_manager;
 mod type_inference;
-mod vm;
 
 use std::io::{self, Write};
 
 use crate::hypervisor::Hypervisor;
 
 use chronos_repl::repl;
-use chronos_core;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("C∀O (Kao) - Categorical ∀xiomatic Ordinal Language v0.1.0");

@@ -3,7 +3,7 @@
 
 use chronos_repl::EnhancedRepl;
 // use chronos::repl::Repl;
-use chronos::vm::VirtualMachine;
+use chronos_core::VirtualMachine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 Chronos C∀O: Theorem Proving Improvements Showcase");

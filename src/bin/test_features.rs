@@ -2,7 +2,7 @@
 //! This allows us to test the new functionality without entering the main REPL loop
 
 use chronos_repl::EnhancedRepl;
-use chronos::vm::VirtualMachine;
+use chronos_core::VirtualMachine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing Chronos REPL Improvements");

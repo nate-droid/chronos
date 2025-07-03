@@ -14,7 +14,6 @@ pub mod parser;
 pub mod shell;
 pub mod shell_manager;
 pub mod type_inference;
-pub mod vm;
 
 // Re-export commonly used types and functions for convenience
 pub use goal_builders::{
