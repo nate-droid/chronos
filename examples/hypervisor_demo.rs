@@ -5,7 +5,7 @@
 
 use chronos::hypervisor::{Hypervisor, HypervisorConfig};
 use chronos::shell::GoalType;
-use chronos::types::Value;
+use chronos_core::Value;
 use std::time::Duration;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

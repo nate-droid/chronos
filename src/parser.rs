@@ -5,7 +5,7 @@
 
 use crate::lexer::{LexError, Lexer};
 use crate::type_inference::TypeInferer;
-use crate::types::{
+use chronos_core::{
     OrdinalValue, Token, Type, TypeDefinition, TypeSignature, Value, WordDefinition,
 };
 use std::collections::HashMap;

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use chronos_repl::{EnhancedRepl, ReplError};
-use crate::types::Value;
+use chronos_core::Value;
 
 /// Represents different types of goals a shell can work toward
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

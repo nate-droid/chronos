@@ -3,7 +3,7 @@
 //! This module implements ordinal analysis to ensure program termination and system consistency.
 //! For Phase 1, this is a mock implementation that will be replaced with true ordinal analysis.
 
-use crate::types::{OrdinalValue, Token, WordDefinition};
+use chronos_core::{OrdinalValue, Token, WordDefinition};
 use std::fmt;
 
 /// Errors that can occur during ordinal verification
@@ -132,7 +132,7 @@ impl OrdinalVerifier {
             if i + 2 < tokens.len() {
                 if let (
                     Token::Literal(_),
-                    Token::Literal(crate::types::Value::Nat(1)),
+                    Token::Literal(chronos_core::Value::Nat(1)),
                     Token::Word(op),
                 ) = (&tokens[i], &tokens[i + 1], &tokens[i + 2])
                 {
@@ -144,7 +144,7 @@ impl OrdinalVerifier {
 
             // Pattern: 0 = (equality check with zero)
             if i + 1 < tokens.len() {
-                if let (Token::Literal(crate::types::Value::Nat(0)), Token::Word(op)) =
+                if let (Token::Literal(chronos_core::Value::Nat(0)), Token::Word(op)) =
                     (&tokens[i], &tokens[i + 1])
                 {
                     if op == "=" || op == "<" {
@@ -300,7 +300,7 @@ impl Default for OrdinalVerifier {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Type, TypeSignature};
+    use chronos_core::{Type, TypeSignature};
 
     #[test]
     fn test_mock_verifier_non_recursive() {
@@ -312,7 +312,7 @@ mod tests {
                 outputs: vec![Type::Nat],
             },
             body: vec![
-                Token::Literal(crate::types::Value::Nat(2)),
+                Token::Literal(chronos_core::Value::Nat(2)),
                 Token::Word("*".to_string()),
             ],
             is_axiom: false,

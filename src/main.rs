@@ -6,7 +6,6 @@
 //! - Concatenative (stack-based) programming
 //! - Collaborative verification and evolution
 
-mod core_lib;
 mod goal_builders;
 mod hypervisor;
 mod lexer;
@@ -16,7 +15,6 @@ mod parser;
 mod shell;
 mod shell_manager;
 mod type_inference;
-mod types;
 mod vm;
 
 use std::io::{self, Write};

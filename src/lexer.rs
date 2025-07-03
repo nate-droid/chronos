@@ -3,7 +3,7 @@
 //! This module handles tokenization of C∀O source code, converting text into
 //! a sequence of tokens that can be parsed and executed.
 
-use crate::types::{Token, Value};
+use chronos_core::{Token, Value};
 use std::fmt;
 
 /// Errors that can occur during lexical analysis

@@ -3,7 +3,7 @@
 //! This module implements the stack-based virtual machine that executes C∀O code.
 //! It follows the concatenative programming paradigm with postfix notation.
 
-use crate::types::{
+use chronos_core::{
     MatchArm, OrdinalValue, Pattern, Token, Type, TypeSignature, Value, WordDefinition,
 };
 use std::collections::HashMap;

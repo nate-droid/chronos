@@ -4,7 +4,7 @@
 //! common types of goals that shells can work toward autonomously.
 
 use crate::shell::{CompletionStatus, Goal, GoalType};
-use crate::types::Value;
+use chronos_core::Value;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;

@@ -7,7 +7,6 @@
 //! - Collaborative verification and evolution
 //! - Autonomous goal-oriented shell environments
 
-pub mod core_lib;
 pub mod goal_builders;
 pub mod hypervisor;
 pub mod lexer;
@@ -16,7 +15,6 @@ pub mod parser;
 pub mod shell;
 pub mod shell_manager;
 pub mod type_inference;
-pub mod types;
 pub mod vm;
 
 // Re-export commonly used types and functions for convenience
@@ -27,4 +25,4 @@ pub use goal_builders::{
 pub use hypervisor::{Hypervisor, HypervisorConfig, ShellStatus, VirtualShell};
 pub use shell::{CompletionStatus, Goal, GoalType, Shell, ShellMode};
 pub use shell_manager::{CoordinationStrategy, ShellManager};
-pub use types::{Type, TypeSignature, Value};
+pub use chronos_core::{Type, TypeSignature, Value};

@@ -3,7 +3,7 @@
 //! Implements Hindley-Milner style type inference to automatically deduce types
 //! for word definitions, reducing boilerplate while maintaining type safety.
 
-use crate::types::{Token, Type, TypeSignature, Value};
+use chronos_core::{Token, Type, TypeSignature, Value};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
