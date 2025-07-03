@@ -1,7 +1,7 @@
 //! Theorem Proving Demo for Chronos C∀O
 //! Showcases the new theorem proving features in an interactive way
 
-use chronos::repl::Repl;
+use chronos_repl::EnhancedRepl;
 use std::io::{self, Write};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Welcome to the enhanced C∀O REPL with theorem proving capabilities!");
     println!("This demo showcases the new features for mathematical reasoning.\n");
 
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     // Demo 1: Basic theorem proving workflow
     demo_basic_workflow(&mut repl)?;
@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn demo_basic_workflow(repl: &mut Repl) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_basic_workflow(repl: &mut EnhancedRepl) -> Result<(), Box<dyn std::error::Error>> {
     println!("📚 Demo 1: Basic Theorem Proving Workflow");
     println!("==========================================\n");
 
@@ -64,7 +64,7 @@ fn demo_basic_workflow(repl: &mut Repl) -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
-fn demo_axiom_management(repl: &mut Repl) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_axiom_management(repl: &mut EnhancedRepl) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Demo 2: Axiom and Theorem Management");
     println!("========================================\n");
 
@@ -110,7 +110,7 @@ fn demo_axiom_management(repl: &mut Repl) -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
-fn demo_interactive_proving(repl: &mut Repl) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_interactive_proving(repl: &mut EnhancedRepl) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Demo 3: Interactive Proof Construction");
     println!("==========================================\n");
 
@@ -147,7 +147,7 @@ fn demo_interactive_proving(repl: &mut Repl) -> Result<(), Box<dyn std::error::E
     Ok(())
 }
 
-fn demo_advanced_features(repl: &mut Repl) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_advanced_features(repl: &mut EnhancedRepl) -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Demo 4: Advanced Features");
     println!("============================\n");
 
@@ -194,7 +194,7 @@ fn demo_advanced_features(repl: &mut Repl) -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
-fn interactive_session(repl: &mut Repl) -> Result<(), Box<dyn std::error::Error>> {
+fn interactive_session(repl: &mut EnhancedRepl) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎮 Interactive Session");
     println!("======================\n");
 
@@ -258,7 +258,7 @@ fn interactive_session(repl: &mut Repl) -> Result<(), Box<dyn std::error::Error>
 }
 
 fn execute_and_explain(
-    repl: &mut Repl,
+    repl: &mut EnhancedRepl,
     command: &str,
     explanation: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {

@@ -13,7 +13,6 @@ pub mod hypervisor;
 pub mod lexer;
 pub mod ordinal;
 pub mod parser;
-pub mod repl;
 pub mod shell;
 pub mod shell_manager;
 pub mod type_inference;
@@ -26,7 +25,6 @@ pub use goal_builders::{
     PuzzleBuilder, quick,
 };
 pub use hypervisor::{Hypervisor, HypervisorConfig, ShellStatus, VirtualShell};
-pub use repl::Repl;
 pub use shell::{CompletionStatus, Goal, GoalType, Shell, ShellMode};
 pub use shell_manager::{CoordinationStrategy, ShellManager};
 pub use types::{Type, TypeSignature, Value};

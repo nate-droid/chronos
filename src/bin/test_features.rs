@@ -1,7 +1,7 @@
 //! Test binary for new REPL features
 //! This allows us to test the new functionality without entering the main REPL loop
 
-use chronos::repl::Repl;
+use chronos_repl::EnhancedRepl;
 use chronos::vm::VirtualMachine;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -47,7 +47,7 @@ fn test_builtin_words() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn test_repl_commands() -> Result<(), Box<dyn std::error::Error>> {
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     let commands = vec![
         (".axioms", "List axioms"),
@@ -71,7 +71,7 @@ fn test_repl_commands() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn test_basic_functionality() -> Result<(), Box<dyn std::error::Error>> {
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     println!("Testing basic arithmetic:");
     repl.eval("3 4 +")?;
@@ -95,7 +95,7 @@ fn test_basic_functionality() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn interactive_demo() -> Result<(), Box<dyn std::error::Error>> {
-    let mut repl = Repl::new();
+    let mut repl = EnhancedRepl::new();
 
     println!("Creating a small mathematical theory...");
     println!();
