@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
-use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::shell::GoalType;
@@ -81,7 +80,6 @@ pub enum RestartPolicy {
 #[derive(Debug, Clone)]
 pub struct HypervisorConfig {
     pub max_shells: usize,
-    pub default_cpu_limit: f64,
     pub default_memory_limit: u64,
     pub network_pool_size: u16,
     pub auto_cleanup: bool,
@@ -170,7 +168,6 @@ pub struct Hypervisor {
     networks: Arc<Mutex<HashMap<String, VirtualNetwork>>>,
     images: Arc<Mutex<HashMap<String, ShellImage>>>,
     config: HypervisorConfig,
-    monitoring_handle: Option<thread::JoinHandle<()>>,
     next_shell_id: Arc<Mutex<u64>>,
 }
 
@@ -188,7 +185,6 @@ impl Hypervisor {
             networks: Arc::new(Mutex::new(HashMap::new())),
             images: Arc::new(Mutex::new(HashMap::new())),
             config,
-            monitoring_handle: None,
             next_shell_id: Arc::new(Mutex::new(1)),
         };
 
@@ -842,7 +838,6 @@ impl Default for HypervisorConfig {
     fn default() -> Self {
         Self {
             max_shells: 50,
-            default_cpu_limit: 25.0,
             default_memory_limit: 50 * 1024 * 1024, // 50MB
             network_pool_size: 1000,
             auto_cleanup: true,

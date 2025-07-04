@@ -28,7 +28,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Type 'hypervisor' to enter hypervisor mode");
     println!();
 
-    // let mut repl = Repl::new();
     let mut repl = repl::EnhancedRepl::new();    
 
     loop {

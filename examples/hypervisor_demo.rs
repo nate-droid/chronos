@@ -15,7 +15,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a hypervisor with custom configuration
     let config = HypervisorConfig {
         max_shells: 10,
-        default_cpu_limit: 30.0,
         default_memory_limit: 100 * 1024 * 1024, // 100MB
         network_pool_size: 100,
         auto_cleanup: true,
